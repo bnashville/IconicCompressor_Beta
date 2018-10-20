@@ -10,6 +10,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "CompressorFunctions.cpp"
 
 
 //==============================================================================
@@ -207,16 +208,9 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
             adjustedInput = buffer.getReadPointer(channel)[sample] * pow(10.f,inputValue/20.f);
             
             // get level of current sample, either linear or dB based on toggle button
-            if ( sideChainAlgorithm == 0) {
-                
-                // get dB value of current sample
-                inputUnipolar = abs(adjustedInput);
-                inputLevel = 20.f * log10(inputUnipolar/1.f);
-            }
-            else {
-                //analize sidechain input in linear value
-                  inputLevel = abs(adjustedInput);
-            }
+          
+            inputLevel = levelDetection(adjustedInput, sideChainAlgorithm);
+
             
             // we have the current input level, now we need to consider our algorithm
             

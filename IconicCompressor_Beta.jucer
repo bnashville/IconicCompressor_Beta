@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT name="IconicCompressor_Beta" projectType="audioplug" buildStandalone="1"
-              jucerVersion="5.2.1">
+              jucerVersion="5.3.2" id="h4PFXH" pluginFormats="buildAU,buildStandalone,buildVST"
+              buildVST="1" buildVST3="0" buildAU="1" buildAUv3="0" buildRTAS="0"
+              buildAAX="0" enableIAA="0">
   <MAINGROUP id="NnGnSg" name="IconicCompressor_Beta">
     <GROUP id="{6DF7BC10-01E1-7A76-AE15-556CF2291662}" name="Source">
+      <FILE id="ElRAVF" name="CompressorFunctions.cpp" compile="1" resource="0"
+            file="Source/CompressorFunctions.cpp"/>
+      <FILE id="Ra3On7" name="CompressorFunctions.h" compile="0" resource="0"
+            file="Source/CompressorFunctions.h"/>
       <FILE id="iOrh3a" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="RWw5RO" name="PluginProcessor.h" compile="0" resource="0"
@@ -40,7 +46,7 @@
     </XCODE_MAC>
   </EXPORTFORMATS>
   <MODULES>
-    <MODULE id="hack_audio_gui" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="hack_audio_gui" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="&#4;"/>
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="&#4;"/>
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="&#4;"/>
@@ -59,4 +65,7 @@
     <MODULE id="juce_video" showAllCode="1" useLocalCopy="0" useGlobalPath="&#4;"/>
   </MODULES>
   <JUCEOPTIONS/>
+  <LIVE_SETTINGS>
+    <OSX/>
+  </LIVE_SETTINGS>
 </JUCERPROJECT>

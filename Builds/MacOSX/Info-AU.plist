@@ -29,17 +29,17 @@
     <array>
       <dict>
         <key>name</key>
-        <string>yourcompany: JUCE Project</string>
+        <string>yourcompany: IconicCompressor_Beta</string>
         <key>description</key>
-        <string>JUCE Project</string>
+        <string>IconicCompressor_Beta</string>
         <key>factoryFunction</key>
-        <string>JUCEProjectAUFactory</string>
+        <string>IconicCompressor_BetaAUFactory</string>
         <key>manufacturer</key>
         <string>Manu</string>
         <key>type</key>
         <string>aufx</string>
         <key>subtype</key>
-        <string>Wmxk</string>
+        <string>H4pf</string>
         <key>version</key>
         <integer>65536</integer>
       </dict>

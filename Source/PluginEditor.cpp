@@ -16,8 +16,7 @@
 IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEditor (IconicCompressor_betaAudioProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
-    // analog, digital
-    // sidchain: linear, dB
+
     // order: smoothing before static charastics, or v/v
     // smoothing method: peak, rms approximation, rms exact, 2nd order smoothing function (biquad), feed forward (straight), feed-back (straight), mixed (ff & fb)
     
@@ -25,26 +24,6 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     //Settings for the input
-
-    
-    //------------------TOGGLE BUTTONS, ROW 0, input SOURCE-------------
-    //input source button
-    analogSourceButton.addListener(this);
-    analogSourceButton.setButtonText("Analog");
-    analogSourceButton.setConnectedEdges(Button::ConnectedOnLeft);
-    analogSourceButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    analogSourceButton.setSize(80,30);
-    analogSourceButton.setRadioGroupId(4);
-    addAndMakeVisible(analogSourceButton);
-    
-    digitalSourceButton.addListener(this);
-    digitalSourceButton.setButtonText("Digital");
-    digitalSourceButton.setConnectedEdges(Button::ConnectedOnRight);
-    digitalSourceButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    digitalSourceButton.setSize(80,30);
-    digitalSourceButton.setToggleState(true, dontSendNotification);
-    digitalSourceButton.setRadioGroupId(4);
-    addAndMakeVisible(digitalSourceButton);
 
 
     //------------------KNOB SETTINGS -----------------
@@ -201,48 +180,7 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     addAndMakeVisible(mixLabel);
   
     
-    // ------------------------TOGGLE BUTTONS, ROW 1, ANALOG TYPE -----------------
-    
-    
-    // Various settings for the tube wave button
-    tubeButton.addListener(this);
-    //tubeButton.setColour(3, juce::Colours::gold);
-    tubeButton.setButtonText("Tube");
-    tubeButton.setConnectedEdges(Button::ConnectedOnRight);
-    tubeButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    tubeButton.setSize(90,40);
-    tubeButton.setRadioGroupId(1);
-    tubeButton.setToggleState(true, dontSendNotification);
-    addAndMakeVisible(tubeButton);
-    
-    // Various settings for the optical wave button
-    opticalButton.addListener(this);
-    opticalButton.setButtonText("Optical");
-    opticalButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    opticalButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    opticalButton.setSize(90,40);
-    opticalButton.setRadioGroupId(1);
-    addAndMakeVisible(opticalButton);
-    
-    // Various settings for the fet wave button
-    fetButton.addListener(this);
-    fetButton.setButtonText("FET");
-    fetButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    fetButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    fetButton.setSize(90,40);
-    fetButton.setRadioGroupId(1);
-    addAndMakeVisible(fetButton);
-    
-    // Various settings for the vca wave button
-    vcaButton.addListener(this);
-    vcaButton.setButtonText("VCA");
-    vcaButton.setConnectedEdges(Button::ConnectedOnLeft);
-    vcaButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    vcaButton.setSize(90,40);
-    vcaButton.setRadioGroupId(1);
-    addAndMakeVisible(vcaButton);
-
-    
+   
      // ------------------------TOGGLE BUTTONS, ROW 1, DIGITAL TYPE -----------------
     
     // Various settings for the perceptual wave button
@@ -353,19 +291,9 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     addAndMakeVisible(bassTremButton);
 
     
-    // ------------------------ SLIDERS, ROW 3, SIDECHAIN EQ OPTIONS  -----------------
-
-    
-    
     //-------------------FLEX BOX ITEMS ----------------
     
-    //Flex box for input source button
-    flexButtons.addComponent(digitalSourceButton);
-    flexButtons.addComponent(analogSourceButton);
-
-    //flexButtons.setJustifyContent(juce::FlexBox::JustifyContent::center);
-    flexButtons.applyBounds(juce::Rectangle<int>(150,60,160,40));
-    
+   
     // Flex Box for tremolo type Buttons
     flexTremType.addComponent(normalTremButton);
     flexTremType.addComponent(trebleTremButton);
@@ -373,7 +301,7 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     flexTremType.addComponent(crossoverKnob);
     
     //flexTremType.setJustifyContent(juce::FlexBox::JustifyContent::center);
-    flexTremType.applyBounds(juce::Rectangle<int>(475,300,320,40));
+    flexTremType.applyBounds(juce::Rectangle<int>(300,60,310,40));
     
     //Flex box for knobs
     flexKnobs.addComponent(inputKnob);
@@ -389,15 +317,7 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
 
     flexKnobs.applyBounds(juce::Rectangle<int>(20,140,400+(6*75),85));
     
-    // Flex Box for analog Buttons
-    flexAnalog.addComponent(tubeButton);
-    flexAnalog.addComponent(opticalButton);
-    flexAnalog.addComponent(fetButton);
-    flexAnalog.addComponent(vcaButton);
-    
-    flexAnalog.setJustifyContent(juce::FlexBox::JustifyContent::center);
-    flexAnalog.applyBounds(juce::Rectangle<int>(guiWidth/3,250,350,40));
-    
+   
     // Flex Box for analog Buttons
     flexLevelDetector.addComponent(peakScButton);
     flexLevelDetector.addComponent(rmsScButton);
@@ -457,13 +377,7 @@ void IconicCompressor_betaAudioProcessorEditor::paint (Graphics& g)
     g.drawFittedText ("compressor",0, 20, 970, 25, Justification::centred, 1.0);
     
     
-    if (processor.analogDigitalAlgorithm == 0) {
-        
-        tubeButton.setVisible(false);
-        opticalButton.setVisible(false);
-        fetButton.setVisible(false);
-        vcaButton.setVisible(false);
-    }
+   
     if (processor.tremTypeAlgorithm == 0) {
          crossoverKnob.setEnabled(false);
     }
@@ -478,81 +392,27 @@ void IconicCompressor_betaAudioProcessorEditor::resized()
 
 void IconicCompressor_betaAudioProcessorEditor::buttonClicked(Button* button)
 {
-   // ------ ANALOG/DIGITAL SELECTION ---------
-
-    if (button == &digitalSourceButton) {
-        
-        // need to remove analog toggle buttons & add digital buttons
-        processor.analogDigitalAlgorithm = 0;
-        peakScButton.setVisible(true);
-        rmsScButton.setVisible(true);
-        levelCorrectedButton.setVisible(true);
-        smoothButton.setVisible(true);
-        
-        feedBackScButton.setVisible(true);
-        feedForwardButton.setVisible(true);
-        hybridButton.setVisible(true);
-        
-        tubeButton.setVisible(false);
-        opticalButton.setVisible(false);
-        fetButton.setVisible(false);
-        vcaButton.setVisible(false);
-        
-    }
-    if (button == &analogSourceButton) {
-       processor.analogDigitalAlgorithm = 1;
-        // need to remove digital toggle buttons & add analog buttons
-        peakScButton.setVisible(false);
-        rmsScButton.setVisible(false);
-        levelCorrectedButton.setVisible(false);
-        smoothButton.setVisible(false);
-        
-        feedBackScButton.setVisible(false);
-        feedForwardButton.setVisible(false);
-        hybridButton.setVisible(false);
-        
-        tubeButton.setVisible(true);
-        opticalButton.setVisible(true);
-        fetButton.setVisible(true);
-        vcaButton.setVisible(true);
-    }
-    
+  
     //---------WAVETYPE VALUES-------------------
-    if (button == &tubeButton) {
-        processor.compressorAlgorithm = 0;
-        
-    }
-    if (button == &opticalButton) {
-        processor.compressorAlgorithm = 1;
- 
-    }
-    if (button == &fetButton) {
-        processor.compressorAlgorithm = 2;
-        
-    }
-    if (button == &vcaButton) {
-        processor.compressorAlgorithm = 3;
-    }
+  
     if (button == &peakScButton) {
-        processor.compressorAlgorithm = 4;
+        processor.sideChainAlgorithm = 0;
     }
     if (button == &rmsScButton) {
-        processor.compressorAlgorithm = 5;
+        processor.sideChainAlgorithm = 1;
     }
     if (button == &smoothButton) {
-        processor.compressorAlgorithm = 6;
+        processor.compressorAlgorithm = 0;
     }
-    if (button == &smoothButton) {
-        processor.compressorAlgorithm = 7;
-    }
+   
     if (button == &feedBackScButton) {
-        processor.compressorAlgorithm = 8;
+        processor.compressorAlgorithm = 1;
     }
     if (button == &feedForwardButton) {
-        processor.compressorAlgorithm = 9;
+        processor.compressorAlgorithm = 2;
     }
     if (button == &hybridButton) {
-        processor.compressorAlgorithm = 10;
+        processor.compressorAlgorithm = 3;
     }
 
     //------------TREMTYPE VALUES----------------------

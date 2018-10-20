@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E90EFE5DE1628A70D42F2664"
+               BlueprintIdentifier = "9839F82ED85681026B016498"
                BuildableName = "IconicCompressor_Beta.component"
                BlueprintName = "IconicCompressor_Beta - AU"
                ReferencedContainer = "container:IconicCompressor_Beta.xcodeproj">
@@ -49,7 +49,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E90EFE5DE1628A70D42F2664"
+            BlueprintIdentifier = "9839F82ED85681026B016498"
             BuildableName = "IconicCompressor_Beta.component"
             BlueprintName = "IconicCompressor_Beta - AU"
             ReferencedContainer = "container:IconicCompressor_Beta.xcodeproj">
@@ -67,7 +67,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E90EFE5DE1628A70D42F2664"
+            BlueprintIdentifier = "9839F82ED85681026B016498"
             BuildableName = "IconicCompressor_Beta.component"
             BlueprintName = "IconicCompressor_Beta - AU"
             ReferencedContainer = "container:IconicCompressor_Beta.xcodeproj">
