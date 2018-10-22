@@ -10,7 +10,6 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "CompressorFunctions.cpp"
 
 
 //==============================================================================
@@ -28,7 +27,8 @@ IconicCompressor_betaAudioProcessor::IconicCompressor_betaAudioProcessor()
 {
     
     state = new AudioProcessorValueTreeState(*this, nullptr);
-    
+    trebleOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::HIGHPASS), 1, 44100);
+    bassOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::LOWPASS), 1, 44100);
     
     state->createAndAddParameter("input", "Input", "Input", NormalisableRange<float>(-48, 12, .1), 0, nullptr, nullptr);
     state->createAndAddParameter("output", "Output", "Output", NormalisableRange<float>(-48, 12, .1), 0, nullptr, nullptr);
@@ -44,10 +44,15 @@ IconicCompressor_betaAudioProcessor::IconicCompressor_betaAudioProcessor()
    
     state->state = ValueTree("compressor");
     
+
+    
+    
 }
 
 IconicCompressor_betaAudioProcessor::~IconicCompressor_betaAudioProcessor()
 {
+    delete trebleOutput;
+    delete bassOutput;
 }
 
 //==============================================================================
@@ -117,6 +122,13 @@ void IconicCompressor_betaAudioProcessor::prepareToPlay (double sampleRate, int 
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    Fs = getSampleRate();
+    
+    trebleOutput->SetSamplingRate(Fs);
+    trebleOutput->SetQValue(.707);
+    
+    bassOutput->SetSamplingRate(Fs);
+    bassOutput->SetQValue(.707);
 }
 
 void IconicCompressor_betaAudioProcessor::releaseResources()
@@ -154,7 +166,7 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-    Fs = getSampleRate();
+    
     
 
     // In case we have more outputs than inputs, this code clears any output
@@ -185,23 +197,20 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     float lowCutValue = *state->getRawParameterValue("lowCut");
     float highCutValue = *state->getRawParameterValue("highCut");
 
-
+    //Set Crossover value in case needed later for biquad
+    bassOutput->SetCutoff(crossoverValue);
+    trebleOutput->SetCutoff(crossoverValue);
+    
     attackValue = attackValue / 1000;
     releaseValue = releaseValue / 1000;
     
     alphaA = exp(-log(9) / (Fs * attackValue));
     alphaR = exp(-log(9) / (Fs * releaseValue));
-    
-    //Initialize a crossover to split up the signal into treble and bass parts if needed. Maybe should be in an "if" so we aren't wasting mem
-    //crossoverFilter splitSignal;
-    //splitSignal.Fs = Fs;
-    
-    
+
     //loop through each channel, I.E. Left & Right, or 5.1, etc. -------------------------------------------------------------------
     
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
-       
         
         
         //----------------------SAMPLE BUFFER ----------------------------------------------------------------------
@@ -255,26 +264,23 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
             }
             else {
                 //for all other cases, need to split signal into 'bass' and 'treble' parts to modify seperately.
-
-                //splitSignal.crossoverFrequency = crossoverValue;
-                //splitSignal.chan = channel;
-                //splitSignal.currentSample[channel] = buffer.getReadPointer(channel)[sample];
-                
-                
-                //trebleOutput[channel] = splitSignal.treble[0][channel];
-                //bassOutput[channel] = splitSignal.bass[0][channel];
+                // this is done using the biquad class and should be ready to go
+    
+                trebleOut[channel] = trebleOutput->GetAValue();
+                bassOut[channel] = bassOutput->GetAValue();
 
                 
                 //--------APPLY COMPRESSION TO BASS OR TREBLE ONLY--------------
                 if (tremTypeAlgorithm == 1) {
                     //APPLY TREBLE COMPRESSION HERE only
-                    modulatedTreble = trebleOutput[channel] ;
-                    modulatedBass = bassOutput[channel] ;
+                    modulatedTreble = trebleOut[channel] ;
+                    
+                    modulatedBass = bassOut[channel] ; //don't change the bass
                 }
                 else if (tremTypeAlgorithm == 2) {
                     //apply bass compression here
-                    modulatedBass = bassOutput[channel] ;
-                    modulatedTreble = trebleOutput[channel] ;
+                    modulatedBass = bassOut[channel];
+                    modulatedTreble = trebleOut[channel] ; //don't change the treble
      
                 }
 

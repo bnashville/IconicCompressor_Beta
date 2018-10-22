@@ -399,7 +399,7 @@ void IconicCompressor_betaAudioProcessorEditor::paint (Graphics& g)
     g.setColour (juce::Colours::mediumseagreen);//g.setColour (Colours::cyan);
     g.drawFittedText ("compressor",0, 20, 970, 25, Justification::centred, 1.0);
     
-    if (processor.defaultKnobView == 3) {
+    if (processor.defaultKnobView == 0) {
         
         inputKnob.setVisible(true);
         thresholdKnob.setVisible(true);

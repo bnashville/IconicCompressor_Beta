@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "Filters.h"
 
 
 //==============================================================================
@@ -71,56 +72,23 @@ public:
     
     float multiplierAlgorithm = 8;
     int tremTypeAlgorithm = 0;
-    
-    //EQ Processing Values
-    int f0 = 2000;
-    int f0Tone = 100;
-    float w0 = 0;
-    float w0Tone = 0;
-    float alpha = 1;
-    float alphaTone = 1;
-    float Q = 0.707;
-    float QTone = 0.707;
-    
-    float b0LPF =  1;
-    float b1LPF =   1;
-    float b2LPF =  1;
-    float a0LPF =   1;
-    float a1LPF =  1;
-    float a2LPF = 1;
-    //float bassOutput[3][2] = {0};
-      float bassOutput[2] = {0};
-    
-    float b0HPF =  1;
-    float b1HPF =   1;
-    float b2HPF =  1;
-    float a0HPF =   1;
-    float a1HPF =  1;
-    float a2HPF = 1;
-    //float trebleOutput[3][2] = {0};
-    float trebleOutput[2] = {0};
-    
-    float b0Tone =  1;
-    float b1Tone =   1;
-    float b2Tone =  1;
-    float a0Tone =   1;
-    float a1Tone =  1;
-    float a2Tone = 1;
-    float toneOutput[3][2] = {0};
-    
-    float PrevSample[3][2];
-    
-    float tone = 20000;
-    
+
+
     AudioProcessorValueTreeState& getState();
     
 private:
+    RBJFilter* trebleOutput;
+    RBJFilter* bassOutput;
+    
     double Fs = 48000;
     float pi = 3.141592653589793238;
     float adjustedInput = 0;
     float inputLevel = 0;
     float inputUnipolar = 0;
-    float outputSample[2] = {0};
+    
+    float trebleOut[2] = {0};
+    float bassOut[2] = {0};
+    
     float gainSideChain[2] = {0};
     float gainChange_dB[2] = {0};
     float gainSmooth[2] = {0};
@@ -144,3 +112,46 @@ private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IconicCompressor_betaAudioProcessor)
 };
+
+
+// Level Detection Algorithms
+float levelDetection(float inputSample, int detectionType) {
+    
+    //return db value of sidechain
+    if (detectionType == 0) {
+        
+        return 20.f * log10(abs(inputSample)/1.f);
+        
+    }
+    
+    // return linear value of sidechain
+    else if (detectionType == 1) {
+        return abs(inputSample);
+        
+    }
+    else {
+        return inputSample;
+    }
+    
+}
+
+//Smoothing Function
+float gainSmoothFunction(float currentSample, float previousSample, float alphaAttack, float alphaRelease) {
+    
+    
+    // smooth over the gainChange
+    if(currentSample < previousSample) {
+        //attack
+        return  ((1-alphaAttack) * currentSample) + (alphaAttack*previousSample);
+        
+    }
+    else {
+        //release
+        return ((1-alphaRelease) * currentSample) + (alphaRelease*previousSample);
+    }
+    
+}
+// Gain Computer
+
+
+
