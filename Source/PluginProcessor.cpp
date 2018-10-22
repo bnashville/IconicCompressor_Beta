@@ -192,6 +192,11 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     alphaA = exp(-log(9) / (Fs * attackValue));
     alphaR = exp(-log(9) / (Fs * releaseValue));
     
+    //Initialize a crossover to split up the signal into treble and bass parts if needed. Maybe should be in an "if" so we aren't wasting mem
+    //crossoverFilter splitSignal;
+    //splitSignal.Fs = Fs;
+    
+    
     //loop through each channel, I.E. Left & Right, or 5.1, etc. -------------------------------------------------------------------
     
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
@@ -217,7 +222,7 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
             
             if(tremTypeAlgorithm == 0) { // NOT multiband
                 
-                if (inputLevel < -96) {
+                if (inputLevel < -96) { // does this work for linear & dB levelDetection?
                     inputLevel = -96;
                 }
             
@@ -233,16 +238,10 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
                 
                 gainChange_dB[channel] = gainSideChain[channel] - inputLevel;
                 
-                // smooth over the gainChange
-                if(gainChange_dB[channel] < gainSmoothPrev[channel]) {
-                    //attack
-                    gainSmooth[channel] = ((1-alphaA) * gainChange_dB[channel]) + (alphaA*gainSmoothPrev[channel]);
-                    
-                }
-                else {
-                    //release
-                    gainSmooth[channel] = ((1-alphaR) * gainChange_dB[channel]) + (alphaR*gainSmoothPrev[channel]);
-                }
+                //gain Smoothing
+                gainSmooth[channel] = gainSmoothFunction(gainChange_dB[channel], gainSmoothPrev[channel], alphaA, alphaR);
+                
+
                 
                 // convert to linear amplitude scalar
                 linA[channel] = pow(10,gainSmooth[channel]/20);
@@ -253,94 +252,30 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
                 //update gainSmoothPrev
                 gainSmoothPrev[channel] = gainSmooth[channel];
                 
-                //create our next LFO value based on which wave type is selected
-                switch(compressorAlgorithm) {
-                        
-                    case 0 :
-                        //tube
-                        break;
-                    case 1:    //do stuff; //optical
-                        break;
-                    case 2:  //do stuff; //fet
-                        break;
-                    case 3:  //do stuff; //vca
-                        
-                        break;
-                    case 4:  //do stuff; //perceptual
-                        break;
-                    case 5:  //do stuff; //other
-                        break;
-                } //end of switch
-               
-                //recombineSignal =  buffer.getReadPointer(channel)[sample];
-                
             }
             else {
                 //for all other cases, need to split signal into 'bass' and 'treble' parts to modify seperately.
+
+                //splitSignal.crossoverFrequency = crossoverValue;
+                //splitSignal.chan = channel;
+                //splitSignal.currentSample[channel] = buffer.getReadPointer(channel)[sample];
                 
-                f0 = crossoverValue;
-                w0 = 2*pi*f0/Fs;
-                Q = 0.707;
-                alpha = sin(w0)/(2*Q);
                 
-                //BASS
-                //LPF: H(s) = 1 / (s^2 + s/Q + 1)
-                b0LPF =  (1 - cos(w0))/2;
-                b1LPF =   1 - cos(w0);
-                b2LPF =  (1 - cos(w0))/2;
-                a0LPF =   1 + alpha;
-                a1LPF =  -2*cos(w0);
-                a2LPF =   1 - alpha;
-                
-                //Slide the samples over one position; a circular buffer of sorts?
-                PrevSample[2][channel]  = PrevSample[1][channel] ;
-                PrevSample[1][channel]  = PrevSample[0][channel] ;
-                PrevSample[0][channel]  = buffer.getReadPointer(channel)[sample];
-                
-                //y[n] = (b0LPF/a0LPF)*x[n] + (b1LPF/a0LPF)*x[n-1] + (b2LPF/a0LPF)*x[n-2] - (a1LPF/a0LPF)*y[n-1] - (a2LPF/a0LPF)*y[n-2];
-                bassOutput[0][channel]  = (b0LPF/a0LPF)*PrevSample[0][channel] +
-                (b1LPF/a0LPF)*PrevSample[1][channel]  +
-                (b2LPF/a0LPF)*PrevSample[2][channel]  -
-                (a1LPF/a0LPF)*bassOutput[1][channel]  -
-                (a2LPF/a0LPF)*bassOutput[2][channel] ;
-                
-                //TREBLE
-                //HPF: H(s) = s^2 / (s^2 + s/Q + 1)
-                b0HPF =  (1 + cos(w0))/2;
-                b1HPF = -(1 + cos(w0));
-                b2HPF =  (1 + cos(w0))/2;
-                a0HPF =   1 + alpha;
-                a1HPF =  -2*cos(w0);
-                a2HPF =   1 - alpha;
-                
-                trebleOutput[0][channel]  = (b0HPF/a0HPF)*PrevSample[0][channel]  +
-                (b1HPF/a0HPF)*PrevSample[1][channel]  +
-                (b2HPF/a0HPF)*PrevSample[2][channel]  -
-                (a1HPF/a0HPF)*trebleOutput[1][channel]  -
-                (a2HPF/a0HPF)*trebleOutput[2][channel] ;
-                
-                //---------BUFFERS FOR ALL EQ FUNCTIONS-------------------------
-                
-                //here is the buffer to keep track of previous values
-                
-                bassOutput[2][channel]  = bassOutput[1][channel] ;
-                bassOutput[1][channel]  = bassOutput[0][channel] ;
-                
-                trebleOutput[2][channel]  = trebleOutput[1][channel] ;
-                trebleOutput[1][channel]  = trebleOutput[0][channel] ;
+                //trebleOutput[channel] = splitSignal.treble[0][channel];
+                //bassOutput[channel] = splitSignal.bass[0][channel];
+
                 
                 //--------APPLY COMPRESSION TO BASS OR TREBLE ONLY--------------
                 if (tremTypeAlgorithm == 1) {
                     //APPLY TREBLE COMPRESSION HERE only
-                    modulatedTreble = trebleOutput[0][channel] ;
-                    modulatedBass = bassOutput[0][channel] ;
+                    modulatedTreble = trebleOutput[channel] ;
+                    modulatedBass = bassOutput[channel] ;
                 }
                 else if (tremTypeAlgorithm == 2) {
-                    //bass only
-                    modulatedBass = bassOutput[0][channel] ;
-                    modulatedTreble = trebleOutput[0][channel] ;
-                    
-                    
+                    //apply bass compression here
+                    modulatedBass = bassOutput[channel] ;
+                    modulatedTreble = trebleOutput[channel] ;
+     
                 }
 
                 //processing done, combine bass & treble back into one signal

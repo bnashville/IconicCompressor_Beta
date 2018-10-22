@@ -66,7 +66,7 @@ public:
     // 0 - Tube, 1 - Optical, 2 - Fet, 3 - VCA, 4 - perceptual, 5 - other
     int compressorAlgorithm = 0;
     int rateSourceAlgorithm = 1;
-    int analogDigitalAlgorithm = 0;
+    int defaultKnobView = 0;
     int sideChainAlgorithm = 0;
     
     float multiplierAlgorithm = 8;
@@ -88,8 +88,8 @@ public:
     float a0LPF =   1;
     float a1LPF =  1;
     float a2LPF = 1;
-    float bassOutput[3][2] = {0};
-    
+    //float bassOutput[3][2] = {0};
+      float bassOutput[2] = {0};
     
     float b0HPF =  1;
     float b1HPF =   1;
@@ -97,8 +97,8 @@ public:
     float a0HPF =   1;
     float a1HPF =  1;
     float a2HPF = 1;
-    float trebleOutput[3][2] = {0};
-    
+    //float trebleOutput[3][2] = {0};
+    float trebleOutput[2] = {0};
     
     float b0Tone =  1;
     float b1Tone =   1;

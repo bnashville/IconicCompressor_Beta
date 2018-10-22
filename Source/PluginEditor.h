@@ -42,6 +42,7 @@ public:
     
     int largeSliderSize = 100;
     int smallSliderSize = 75;
+    int knobSpacing = 100;
     
 private:
     // This reference is provided as a quick way for your editor to
@@ -73,8 +74,8 @@ private:
     juce::Label attackLabel;
     IconicCompressor_betaAudioProcessor& processor;
     
-    HackAudio::Button analogSourceButton;
-    HackAudio::Button digitalSourceButton;
+    HackAudio::Button sidechainKnobsButton;
+    HackAudio::Button compressorKnobsButton;
     
     HackAudio::Button tubeButton;
     HackAudio::Button opticalButton;
@@ -104,7 +105,7 @@ private:
     
     HackAudio::FlexBox flexOrder;
     HackAudio::FlexBox flexButtons;
-    HackAudio::FlexBox flexKnobs;
+    HackAudio::FlexBox flexKnobsCompressor;
     HackAudio::FlexBox flexAnalog;
     HackAudio::FlexBox flexLevelDetector;
     HackAudio::FlexBox flexSystemDesign;
@@ -113,6 +114,7 @@ private:
     HackAudio::FlexBox flexTremType;
     HackAudio::FlexBox flexSideChain;
     HackAudio::FlexBox flexMix;
+    HackAudio::FlexBox flexKnobsSidechain;
     
     
     ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> thresholdAttachment;

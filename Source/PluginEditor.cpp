@@ -25,6 +25,23 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     // editor's size to whatever you need it to be.
     //Settings for the input
 
+    sidechainKnobsButton.addListener(this);
+    sidechainKnobsButton.setButtonText("Sidechain");
+    sidechainKnobsButton.setConnectedEdges(Button::ConnectedOnLeft);
+    sidechainKnobsButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    sidechainKnobsButton.setSize(80,30);
+    sidechainKnobsButton.setRadioGroupId(4);
+    
+    addAndMakeVisible(sidechainKnobsButton);
+    
+    compressorKnobsButton.addListener(this);
+    compressorKnobsButton.setButtonText("Compressor");
+    compressorKnobsButton.setConnectedEdges(Button::ConnectedOnRight);
+    compressorKnobsButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    compressorKnobsButton.setSize(80,30);
+    compressorKnobsButton.setRadioGroupId(4);
+    compressorKnobsButton.setToggleState(true, dontSendNotification);
+    addAndMakeVisible(compressorKnobsButton);
 
     //------------------KNOB SETTINGS -----------------
     inputKnob.setSliderStyle(Slider::RotaryHorizontalVerticalDrag);
@@ -92,7 +109,7 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     //Settings for the crossoverKnob
     crossoverKnob.setSliderStyle(Slider::RotaryHorizontalVerticalDrag);
     crossoverKnob.addListener(this);
-    crossoverKnob.setSize(40,40);
+    crossoverKnob.setSize(smallSliderSize,smallSliderSize);
     crossoverKnob.setPipCount(9);
     crossoverKnob.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 25);
     addAndMakeVisible(crossoverKnob);
@@ -292,31 +309,37 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
 
     
     //-------------------FLEX BOX ITEMS ----------------
+    //Flex box for input source button
+    flexButtons.addComponent(compressorKnobsButton);
+    flexButtons.addComponent(sidechainKnobsButton);
     
+    //flexButtons.setJustifyContent(juce::FlexBox::JustifyContent::center);
+    flexButtons.applyBounds(juce::Rectangle<int>(380,60,160,40));
    
     // Flex Box for tremolo type Buttons
     flexTremType.addComponent(normalTremButton);
     flexTremType.addComponent(trebleTremButton);
     flexTremType.addComponent(bassTremButton);
-    flexTremType.addComponent(crossoverKnob);
-    
+
     //flexTremType.setJustifyContent(juce::FlexBox::JustifyContent::center);
-    flexTremType.applyBounds(juce::Rectangle<int>(300,60,310,40));
+    flexTremType.applyBounds(juce::Rectangle<int>(500,140,270,40));
     
     //Flex box for knobs
-    flexKnobs.addComponent(inputKnob);
-    flexKnobs.addComponent(attackKnob);
-    flexKnobs.addComponent(releaseKnob);
-    flexKnobs.addComponent(thresholdKnob);
-    flexKnobs.addComponent(ratioKnob);
-    //flexKnobs.addComponent(crossoverKnob);
-    flexKnobs.addComponent(outputKnob);
-    flexKnobs.addComponent(lowCutKnob);
-    flexKnobs.addComponent(highCutKnob);
-    flexKnobs.addComponent(mixKnob);
+    flexKnobsCompressor.addComponent(inputKnob);
+    flexKnobsCompressor.addComponent(thresholdKnob);
+    flexKnobsCompressor.addComponent(attackKnob);
+    flexKnobsCompressor.addComponent(releaseKnob);
+    flexKnobsCompressor.addComponent(ratioKnob);
+    flexKnobsCompressor.addComponent(outputKnob);
+    flexKnobsCompressor.addComponent(mixKnob);
 
-    flexKnobs.applyBounds(juce::Rectangle<int>(20,140,400+(6*75),85));
+    flexKnobsCompressor.applyBounds(juce::Rectangle<int>(100,140,(4*largeSliderSize)+(3*smallSliderSize)+knobSpacing,85));
     
+    // Flex box for sidechain knobs
+    flexKnobsSidechain.addComponent(lowCutKnob);
+    flexKnobsSidechain.addComponent(highCutKnob);
+    flexKnobsSidechain.addComponent(crossoverKnob);
+    flexKnobsSidechain.applyBounds(juce::Rectangle<int>(150,140,(3*smallSliderSize)+knobSpacing,85));
    
     // Flex Box for analog Buttons
     flexLevelDetector.addComponent(peakScButton);
@@ -376,7 +399,25 @@ void IconicCompressor_betaAudioProcessorEditor::paint (Graphics& g)
     g.setColour (juce::Colours::mediumseagreen);//g.setColour (Colours::cyan);
     g.drawFittedText ("compressor",0, 20, 970, 25, Justification::centred, 1.0);
     
-    
+    if (processor.defaultKnobView == 3) {
+        
+        inputKnob.setVisible(true);
+        thresholdKnob.setVisible(true);
+        attackKnob.setVisible(true);
+        releaseKnob.setVisible(true);
+        ratioKnob.setVisible(true);
+        outputKnob.setVisible(true);
+        mixKnob.setVisible(true);
+        
+        
+        lowCutKnob.setVisible(false);
+        highCutKnob.setVisible(false);
+        crossoverKnob.setVisible(false);
+        
+        normalTremButton.setVisible(false);
+        trebleTremButton.setVisible(false);
+        bassTremButton.setVisible(false);
+    }
    
     if (processor.tremTypeAlgorithm == 0) {
          crossoverKnob.setEnabled(false);
@@ -394,7 +435,47 @@ void IconicCompressor_betaAudioProcessorEditor::buttonClicked(Button* button)
 {
   
     //---------WAVETYPE VALUES-------------------
-  
+    if (button == &compressorKnobsButton) {
+        
+        // need to remove analog toggle buttons & add digital buttons
+        
+        inputKnob.setVisible(true);
+        thresholdKnob.setVisible(true);
+        attackKnob.setVisible(true);
+        releaseKnob.setVisible(true);
+        ratioKnob.setVisible(true);
+        outputKnob.setVisible(true);
+        mixKnob.setVisible(true);
+        
+        
+        lowCutKnob.setVisible(false);
+        highCutKnob.setVisible(false);
+        crossoverKnob.setVisible(false);
+        
+        normalTremButton.setVisible(false);
+        trebleTremButton.setVisible(false);
+        bassTremButton.setVisible(false);
+        
+    }
+    if (button == &sidechainKnobsButton){
+      
+        inputKnob.setVisible(false);
+        thresholdKnob.setVisible(false);
+        attackKnob.setVisible(false);
+        releaseKnob.setVisible(false);
+        ratioKnob.setVisible(false);
+        outputKnob.setVisible(false);
+        mixKnob.setVisible(false);
+       
+        lowCutKnob.setVisible(true);
+        highCutKnob.setVisible(true);
+        crossoverKnob.setVisible(true);
+        
+        normalTremButton.setVisible(true);
+        trebleTremButton.setVisible(true);
+        bassTremButton.setVisible(true);
+    }
+    
     if (button == &peakScButton) {
         processor.sideChainAlgorithm = 0;
     }
