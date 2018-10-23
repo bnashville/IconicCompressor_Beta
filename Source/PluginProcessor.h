@@ -12,7 +12,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "Filters.h"
-
+#include "Compressor.h"
 
 
 //==============================================================================
