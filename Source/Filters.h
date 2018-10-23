@@ -1,12 +1,18 @@
+
 #pragma once
 
 #ifndef FILTERS_H
 #define FILTERS_H
 
-#include <stdint.h>
+//#include <stdint.h>
 #include <array>
 
-#include "Util.h"
+//#include "Util.h"
+
+//#include "../JuceLibraryCode/JuceHeader.h"
+
+#include "PluginProcessor.h"
+
 
 class BiQuadBase
 {
@@ -305,3 +311,4 @@ public:
 };
 
 #endif
+ 

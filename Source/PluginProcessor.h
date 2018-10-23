@@ -14,6 +14,7 @@
 #include "Filters.h"
 
 
+
 //==============================================================================
 /**
 */
@@ -59,12 +60,7 @@ public:
 
     
     //my variables
-    
-    // Wave Type Variable
-    // This variable can be used to change between different types of algorithms
 
-    
-    // 0 - Tube, 1 - Optical, 2 - Fet, 3 - VCA, 4 - perceptual, 5 - other
     int compressorAlgorithm = 0;
     int rateSourceAlgorithm = 1;
     int defaultKnobView = 0;
@@ -112,46 +108,4 @@ private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IconicCompressor_betaAudioProcessor)
 };
-
-
-// Level Detection Algorithms
-float levelDetection(float inputSample, int detectionType) {
-    
-    //return db value of sidechain
-    if (detectionType == 0) {
-        
-        return 20.f * log10(abs(inputSample)/1.f);
-        
-    }
-    
-    // return linear value of sidechain
-    else if (detectionType == 1) {
-        return abs(inputSample);
-        
-    }
-    else {
-        return inputSample;
-    }
-    
-}
-
-//Smoothing Function
-float gainSmoothFunction(float currentSample, float previousSample, float alphaAttack, float alphaRelease) {
-    
-    
-    // smooth over the gainChange
-    if(currentSample < previousSample) {
-        //attack
-        return  ((1-alphaAttack) * currentSample) + (alphaAttack*previousSample);
-        
-    }
-    else {
-        //release
-        return ((1-alphaRelease) * currentSample) + (alphaRelease*previousSample);
-    }
-    
-}
-// Gain Computer
-
-
 

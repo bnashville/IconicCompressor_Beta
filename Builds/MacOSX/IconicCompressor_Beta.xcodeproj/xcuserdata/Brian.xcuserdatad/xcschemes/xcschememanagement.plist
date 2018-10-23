@@ -7,35 +7,17 @@
 		<key>IconicCompressor_Beta - AU.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>0</integer>
+			<integer>1</integer>
 		</dict>
 		<key>IconicCompressor_Beta - All.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>2</integer>
+			<integer>0</integer>
 		</dict>
 		<key>IconicCompressor_Beta - Shared Code.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>4</integer>
-		</dict>
-		<key>IconicCompressor_Beta - Standalone Plugin.xcscheme</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>3</integer>
-		</dict>
-		<key>IconicCompressor_Beta - VST.xcscheme</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>1</integer>
-		</dict>
-	</dict>
-	<key>SuppressBuildableAutocreation</key>
-	<dict>
-		<key>9839F82ED85681026B016498</key>
-		<dict>
-			<key>primary</key>
-			<true/>
+			<integer>2</integer>
 		</dict>
 	</dict>
 </dict>

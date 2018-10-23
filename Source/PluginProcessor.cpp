@@ -10,6 +10,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "functions.h"
 
 
 //==============================================================================
@@ -129,6 +130,7 @@ void IconicCompressor_betaAudioProcessor::prepareToPlay (double sampleRate, int 
     
     bassOutput->SetSamplingRate(Fs);
     bassOutput->SetQValue(.707);
+     
 }
 
 void IconicCompressor_betaAudioProcessor::releaseResources()
@@ -194,12 +196,13 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     float attackValue = *state->getRawParameterValue("attack");
     float releaseValue = *state->getRawParameterValue("release");
     float ratioValue = *state->getRawParameterValue("ratio");
+    
     float lowCutValue = *state->getRawParameterValue("lowCut");
     float highCutValue = *state->getRawParameterValue("highCut");
 
     //Set Crossover value in case needed later for biquad
-    bassOutput->SetCutoff(crossoverValue);
-    trebleOutput->SetCutoff(crossoverValue);
+    //bassOutput->SetCutoff(crossoverValue);
+    //trebleOutput->SetCutoff(crossoverValue);
     
     attackValue = attackValue / 1000;
     releaseValue = releaseValue / 1000;
@@ -222,13 +225,10 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
             adjustedInput = buffer.getReadPointer(channel)[sample] * pow(10.f,inputValue/20.f);
             
             // get level of current sample, either linear or dB based on toggle button
-          
-            inputLevel = levelDetection(adjustedInput, sideChainAlgorithm);
-
+            //inputLevel = levelDetection(adjustedInput, sideChainAlgorithm);
+            inputLevel = 1;
             
             // we have the current input level, now we need to consider our algorithm
-            
-            
             if(tremTypeAlgorithm == 0) { // NOT multiband
                 
                 if (inputLevel < -96) { // does this work for linear & dB levelDetection?
@@ -248,8 +248,8 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
                 gainChange_dB[channel] = gainSideChain[channel] - inputLevel;
                 
                 //gain Smoothing
-                gainSmooth[channel] = gainSmoothFunction(gainChange_dB[channel], gainSmoothPrev[channel], alphaA, alphaR);
-                
+               // gainSmooth[channel] = gainSmoothFunction(gainChange_dB[channel], gainSmoothPrev[channel], alphaA, alphaR);
+                gainSmooth[channel] = 1;
 
                 
                 // convert to linear amplitude scalar
@@ -266,8 +266,8 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
                 //for all other cases, need to split signal into 'bass' and 'treble' parts to modify seperately.
                 // this is done using the biquad class and should be ready to go
     
-                trebleOut[channel] = trebleOutput->GetAValue();
-                bassOut[channel] = bassOutput->GetAValue();
+               trebleOut[channel] = trebleOutput-> Tick( 1, channel); //TODO 1 is not correct
+                bassOut[channel] = bassOutput->Tick( 1, channel);
 
                 
                 //--------APPLY COMPRESSION TO BASS OR TREBLE ONLY--------------
@@ -352,3 +352,5 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new IconicCompressor_betaAudioProcessor();
 }
+
+
