@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT name="IconicCompressor_Beta" projectType="audioplug" buildStandalone="0"
-              jucerVersion="5.3.2" id="h4PFXH" pluginFormats="buildAU" buildVST="0"
-              buildVST3="0" buildAU="1" buildAUv3="0" buildRTAS="0" buildAAX="0"
-              enableIAA="0">
+              jucerVersion="5.3.2" id="h4PFXH" pluginFormats="buildAU,buildVST"
+              buildVST="1" buildVST3="0" buildAU="1" buildAUv3="0" buildRTAS="0"
+              buildAAX="0" enableIAA="0">
   <MAINGROUP id="NnGnSg" name="IconicCompressor_Beta">
     <GROUP id="{6DF7BC10-01E1-7A76-AE15-556CF2291662}" name="Source">
       <FILE id="TETq8z" name="functions.h" compile="0" resource="0" file="Source/functions.h"/>

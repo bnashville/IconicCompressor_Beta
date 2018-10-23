@@ -225,8 +225,8 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
             adjustedInput = buffer.getReadPointer(channel)[sample] * pow(10.f,inputValue/20.f);
             
             // get level of current sample, either linear or dB based on toggle button
-            //inputLevel = levelDetection(adjustedInput, sideChainAlgorithm);
-            inputLevel = 1;
+            inputLevel = levelDetection(adjustedInput, sideChainAlgorithm);
+
             
             // we have the current input level, now we need to consider our algorithm
             if(tremTypeAlgorithm == 0) { // NOT multiband
@@ -248,8 +248,8 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
                 gainChange_dB[channel] = gainSideChain[channel] - inputLevel;
                 
                 //gain Smoothing
-               // gainSmooth[channel] = gainSmoothFunction(gainChange_dB[channel], gainSmoothPrev[channel], alphaA, alphaR);
-                gainSmooth[channel] = 1;
+               gainSmooth[channel] = gainSmoothFunction(gainChange_dB[channel], gainSmoothPrev[channel], alphaA, alphaR);
+               
 
                 
                 // convert to linear amplitude scalar

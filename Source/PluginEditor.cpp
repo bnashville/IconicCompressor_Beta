@@ -417,6 +417,8 @@ void IconicCompressor_betaAudioProcessorEditor::paint (Graphics& g)
         normalTremButton.setVisible(false);
         trebleTremButton.setVisible(false);
         bassTremButton.setVisible(false);
+        
+        processor.defaultKnobView = 1;
     }
    
     if (processor.tremTypeAlgorithm == 0) {
