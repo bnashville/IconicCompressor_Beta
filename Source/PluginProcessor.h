@@ -75,7 +75,8 @@ public:
 private:
     RBJFilter* trebleOutput;
     RBJFilter* bassOutput;
-    
+    compressor* thisCompressor;
+        
     double Fs = 48000;
     float pi = 3.141592653589793238;
     float adjustedInput = 0;

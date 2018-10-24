@@ -11,7 +11,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "functions.h"
-
+#include "Compressor.h"
 
 //==============================================================================
 IconicCompressor_betaAudioProcessor::IconicCompressor_betaAudioProcessor()
@@ -30,6 +30,7 @@ IconicCompressor_betaAudioProcessor::IconicCompressor_betaAudioProcessor()
     state = new AudioProcessorValueTreeState(*this, nullptr);
     trebleOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::HIGHPASS), 1, 44100);
     bassOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::LOWPASS), 1, 44100);
+    thisCompressor = new compressor();
     
     state->createAndAddParameter("input", "Input", "Input", NormalisableRange<float>(-48, 12, .1), 0, nullptr, nullptr);
     state->createAndAddParameter("output", "Output", "Output", NormalisableRange<float>(-48, 12, .1), 0, nullptr, nullptr);
@@ -54,6 +55,7 @@ IconicCompressor_betaAudioProcessor::~IconicCompressor_betaAudioProcessor()
 {
     delete trebleOutput;
     delete bassOutput;
+    delete thisCompressor;
 }
 
 //==============================================================================
@@ -124,6 +126,8 @@ void IconicCompressor_betaAudioProcessor::prepareToPlay (double sampleRate, int 
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     Fs = getSampleRate();
+    
+    thisCompressor->SetSamplingRate(Fs);
     
     trebleOutput->SetSamplingRate(Fs);
     trebleOutput->SetQValue(.707);
@@ -200,67 +204,40 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     float lowCutValue = *state->getRawParameterValue("lowCut");
     float highCutValue = *state->getRawParameterValue("highCut");
 
+    //send all these values to the compressor class
+    thisCompressor->setAlphaA(attackValue);
+    thisCompressor->setAlphaR(releaseValue);
+    thisCompressor->setThreshold(thresholdValue);
+    thisCompressor->setRatio(ratioValue);
+    thisCompressor->setCrossoverFrequency(crossoverValue);
+    thisCompressor->setChannelCount(totalNumInputChannels);
+    
+    // set the "units" of the level detector, either 'db' or 'linear'
+    thisCompressor->setDetectorUnit(levelDetector::detectorUnit((levelDetector::detectorUnit::DB)));
+   
+    
     //Set Crossover value in case needed later for biquad
-    //bassOutput->SetCutoff(crossoverValue);
-    //trebleOutput->SetCutoff(crossoverValue);
-    
-    attackValue = attackValue / 1000;
-    releaseValue = releaseValue / 1000;
-    
-    alphaA = exp(-log(9) / (Fs * attackValue));
-    alphaR = exp(-log(9) / (Fs * releaseValue));
+    bassOutput->SetCutoff(crossoverValue);
+    trebleOutput->SetCutoff(crossoverValue);
 
+    
     //loop through each channel, I.E. Left & Right, or 5.1, etc. -------------------------------------------------------------------
     
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         
-        
-        //----------------------SAMPLE BUFFER ----------------------------------------------------------------------
+        thisCompressor->setCurrentChannel(channel);
+//--------------------------------------SAMPLE BUFFER ----------------------------------------------------------------------
         
         //loop throught all samples in the buffer
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample){
        
             //apply input scalar here
             adjustedInput = buffer.getReadPointer(channel)[sample] * pow(10.f,inputValue/20.f);
-            
-            // get level of current sample, either linear or dB based on toggle button
-            inputLevel = levelDetection(adjustedInput, sideChainAlgorithm);
 
-            
             // we have the current input level, now we need to consider our algorithm
             if(tremTypeAlgorithm == 0) { // NOT multiband
-                
-                if (inputLevel < -96) { // does this work for linear & dB levelDetection?
-                    inputLevel = -96;
-                }
-            
-                //compare to threshold
-                if(inputLevel > thresholdValue) {
-                    //perform compression
-                    gainSideChain[channel] = thresholdValue + (inputLevel - thresholdValue) / ratioValue;
-                }
-                else {
-                    // no compression
-                    gainSideChain[channel] = inputLevel;
-                }
-                
-                gainChange_dB[channel] = gainSideChain[channel] - inputLevel;
-                
-                //gain Smoothing
-               gainSmooth[channel] = gainSmoothFunction(gainChange_dB[channel], gainSmoothPrev[channel], alphaA, alphaR);
-               
-
-                
-                // convert to linear amplitude scalar
-                linA[channel] = pow(10,gainSmooth[channel]/20);
-                
-                //apply linear amplitude to input sample
-                recombineSignal = linA[channel] * adjustedInput;
-                
-                //update gainSmoothPrev
-                gainSmoothPrev[channel] = gainSmooth[channel];
-                
+                recombineSignal = thisCompressor->tick(adjustedInput);
             }
             else {
                 //for all other cases, need to split signal into 'bass' and 'treble' parts to modify seperately.
