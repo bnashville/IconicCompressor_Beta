@@ -28,8 +28,6 @@ IconicCompressor_betaAudioProcessor::IconicCompressor_betaAudioProcessor()
 {
     
     state = new AudioProcessorValueTreeState(*this, nullptr);
-    trebleOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::HIGHPASS), 1, 44100);
-    bassOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::LOWPASS), 1, 44100);
     thisCompressor = new compressor();
     
     state->createAndAddParameter("input", "Input", "Input", NormalisableRange<float>(-48, 12, .1), 0, nullptr, nullptr);
@@ -45,16 +43,12 @@ IconicCompressor_betaAudioProcessor::IconicCompressor_betaAudioProcessor()
     state->createAndAddParameter("highCut", "HighCut", "HighCut", NormalisableRange<float>(20, 20000, 1), 20000.0, nullptr, nullptr);
    
     state->state = ValueTree("compressor");
-    
-
-    
-    
+  
 }
 
 IconicCompressor_betaAudioProcessor::~IconicCompressor_betaAudioProcessor()
 {
-    delete trebleOutput;
-    delete bassOutput;
+
     delete thisCompressor;
 }
 
@@ -125,15 +119,9 @@ void IconicCompressor_betaAudioProcessor::prepareToPlay (double sampleRate, int 
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    Fs = getSampleRate();
-    
-    thisCompressor->SetSamplingRate(Fs);
-    
-    trebleOutput->SetSamplingRate(Fs);
-    trebleOutput->SetQValue(.707);
-    
-    bassOutput->SetSamplingRate(Fs);
-    bassOutput->SetQValue(.707);
+    //Fs = getSampleRate();
+    //thisCompressor->SetSamplingRate(Fs);
+thisCompressor->SetSamplingRate(sampleRate);
      
 }
 
@@ -172,8 +160,6 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-    
-    
 
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
@@ -204,75 +190,34 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     float lowCutValue = *state->getRawParameterValue("lowCut");
     float highCutValue = *state->getRawParameterValue("highCut");
 
-    //send all these values to the compressor class
+    //send all these values to the compressor class. Would make sense to be able to send all in one function
     thisCompressor->setAlphaA(attackValue);
     thisCompressor->setAlphaR(releaseValue);
     thisCompressor->setThreshold(thresholdValue);
     thisCompressor->setRatio(ratioValue);
     thisCompressor->setCrossoverFrequency(crossoverValue);
     thisCompressor->setChannelCount(totalNumInputChannels);
+    thisCompressor->setSplitInput(compressor::bandType(compressor::bandType::NORMAL));
     
     // set the "units" of the level detector, either 'db' or 'linear'
     thisCompressor->setDetectorUnit(levelDetector::detectorUnit((levelDetector::detectorUnit::DB)));
-   
-    
-    //Set Crossover value in case needed later for biquad
-    bassOutput->SetCutoff(crossoverValue);
-    trebleOutput->SetCutoff(crossoverValue);
 
-    
     //loop through each channel, I.E. Left & Right, or 5.1, etc. -------------------------------------------------------------------
     
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
-        
         thisCompressor->setCurrentChannel(channel);
-//--------------------------------------SAMPLE BUFFER ----------------------------------------------------------------------
-        
+      
         //loop throught all samples in the buffer
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample){
        
             //apply input scalar here
             adjustedInput = buffer.getReadPointer(channel)[sample] * pow(10.f,inputValue/20.f);
-
-            // we have the current input level, now we need to consider our algorithm
-            if(tremTypeAlgorithm == 0) { // NOT multiband
-                recombineSignal = thisCompressor->tick(adjustedInput);
-            }
-            else {
-                //for all other cases, need to split signal into 'bass' and 'treble' parts to modify seperately.
-                // this is done using the biquad class and should be ready to go
-    
-               trebleOut[channel] = trebleOutput-> Tick( 1, channel); //TODO 1 is not correct
-                bassOut[channel] = bassOutput->Tick( 1, channel);
-
-                
-                //--------APPLY COMPRESSION TO BASS OR TREBLE ONLY--------------
-                if (tremTypeAlgorithm == 1) {
-                    //APPLY TREBLE COMPRESSION HERE only
-                    modulatedTreble = trebleOut[channel] ;
-                    
-                    modulatedBass = bassOut[channel] ; //don't change the bass
-                }
-                else if (tremTypeAlgorithm == 2) {
-                    //apply bass compression here
-                    modulatedBass = bassOut[channel];
-                    modulatedTreble = trebleOut[channel] ; //don't change the treble
-     
-                }
-
-                //processing done, combine bass & treble back into one signal
-                recombineSignal = modulatedTreble + modulatedBass;
-                
-            } // end else (crossover)
+            compressorOutput = thisCompressor->tick(adjustedInput);
             
-            //write the output buffer.
+            //apply output scalar, write the output buffer.
+            buffer.getWritePointer(channel)[sample] = compressorOutput * pow(10.f,outputValue/20.f);
             
-            buffer.getWritePointer(channel)[sample] = recombineSignal * pow(10.f,outputValue/20.f);
-            
-            //-----------------------SET PARAMATERS FOR NEXT ITERATION OF LOOP-----------
-            
-           
         } // sample loop
 
         // ..do something to the data...

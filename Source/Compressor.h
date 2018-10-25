@@ -128,14 +128,8 @@ private:
 class gainSmoothing
 {
 public:
-    
-    
-    gainSmoothing() {
-
-            // smooth over the gainChange
-     
-    }
-    
+ 
+    gainSmoothing() {}
     ~gainSmoothing() {}
     
     void setAlphaA(float alphaA){
@@ -180,6 +174,10 @@ protected:
 
 class compressor {
     
+   
+    
+public:
+    
     enum bandType
     {
         NORMAL,
@@ -187,8 +185,6 @@ class compressor {
         TREBLE,
         MULTI
     };
-    
-public:
     compressor() {
         //standard vs multiband compressor
         setSplitInput(getBandType());
@@ -239,35 +235,23 @@ public:
     }
     void setSplitInput(bandType type = bandType::NORMAL){
         
-        switch (type)
-        {
-            case NORMAL:
-            {
-               //do nothing
-                
-            } break;
-            case BASS:
-            {
-                //run the signal through a filter to split into halves
-                trebleOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::HIGHPASS), 1, 44100);
-                bassOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::LOWPASS), 1, 44100);
-                bassOutput->SetCutoff(getCrossoverFrequency());
-                trebleOutput->SetCutoff(getCrossoverFrequency());
-            } break;
-            case TREBLE:
-            {
-                trebleOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::HIGHPASS), 1, 44100);
-                bassOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::LOWPASS), 1, 44100);
-                bassOutput->SetCutoff(getCrossoverFrequency());
-                trebleOutput->SetCutoff(getCrossoverFrequency());
-            } break;
-            case MULTI:
-            {
-                
-            } break;
-                
+        if (type == NORMAL){
+            // do nothing
         }
-        
+        else if ( (type == BASS) || (type == TREBLE) ) {
+            //run the signal through a filter to split into halves
+            trebleOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::HIGHPASS), 1, 44100);
+            bassOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::LOWPASS), 1, 44100);
+            bassOutput->SetCutoff(getCrossoverFrequency());
+            trebleOutput->SetCutoff(getCrossoverFrequency());
+            bassOutput->SetQValue(.707);
+            trebleOutput->SetQValue(.707);
+            trebleOutput->SetSamplingRate(getSamplingRate());
+            bassOutput->SetSamplingRate(getSamplingRate());
+        }
+        else { //MULTIBAND options will go here in future versions
+            
+        }
 
     }
     
@@ -343,7 +327,6 @@ public:
     void setDetectorUnit(levelDetector::detectorUnit newUnit) {
 
         thisLevelDetector->setDetectorUnit(newUnit);
-
     }
 
     float getInputLevel() {
@@ -362,6 +345,9 @@ public:
     {
         sampleRate = Fs;
         
+    }
+    float getSamplingRate() {
+        return sampleRate;
     }
     
     void setBandType(bandType newType){

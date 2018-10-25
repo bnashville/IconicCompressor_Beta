@@ -73,32 +73,30 @@ public:
     AudioProcessorValueTreeState& getState();
     
 private:
-    RBJFilter* trebleOutput;
-    RBJFilter* bassOutput;
     compressor* thisCompressor;
         
     double Fs = 48000;
     float pi = 3.141592653589793238;
     float adjustedInput = 0;
-    float inputLevel = 0;
-    float inputUnipolar = 0;
+   // float inputLevel = 0;
+    //float inputUnipolar = 0;
     
-    float trebleOut[2] = {0};
-    float bassOut[2] = {0};
+   // float trebleOut[2] = {0};
+   // float bassOut[2] = {0};
     
-    float gainSideChain[2] = {0};
-    float gainChange_dB[2] = {0};
-    float gainSmooth[2] = {0};
-    float linA[2] = {0};
+//    float gainSideChain[2] = {0};
+//    float gainChange_dB[2] = {0};
+//    float gainSmooth[2] = {0};
+//    float linA[2] = {0};
     
-    float alphaA = 0;
-    float alphaR = 0;
-    float gainSmoothPrev[2] = {0};
+//    float alphaA = 0;
+   // float alphaR = 0;
+    //float gainSmoothPrev[2] = {0};
     
     //More EQ
-    float recombineSignal = 1;
-    float modulatedTreble = 1;
-    float modulatedBass = 1;
+    float compressorOutput = 1;
+   // float modulatedTreble = 1;
+   // float modulatedBass = 1;
 
     AudioPlayHead* playHead;
     AudioPlayHead::CurrentPositionInfo currentPositionInfo;
