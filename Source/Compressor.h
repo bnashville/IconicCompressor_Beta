@@ -99,6 +99,9 @@ public:
         inputLevel = i;
         
     }
+    void setGainChangedB(float dB){
+        gainChange_dB = dB;
+    }
     void setStaticChar(){
         if (inputLevel > thresholdValue) {
             gainSC = thresholdValue + (inputLevel - thresholdValue) / ratioValue; //Perform Downwards Compression
@@ -107,10 +110,10 @@ public:
             gainSC = inputLevel; // Do not perform compression
         }
         
-        gainChange_dB = gainSC - inputLevel;
+        setGainChangedB(gainSC - inputLevel);
         
     }
-    float getGainChange(){
+    float getGainChangedB(){
         return gainChange_dB;
     }
 protected:
@@ -139,36 +142,58 @@ public:
         alphaRelease = alphaR;
     }
     
-    void setGainSmooth(float gainChange_dB = 0, float thisSample = 0) {
+    void setChannel(int c){
+        channel = c;
+    }
+    void setGainChangedB(float gc){
+        gainChange_dB = gc;
+    }
+    float getGainChangedB() {
+        return gainChange_dB;
+    }
+    
+    int getChannel(){
+        return channel;
+    }
+    
+    void setGainSmooth() {
         
-        if(gainChange_dB < gainSmoothPrevious) {
+        if(gainChange_dB < gainSmoothPrevious[getChannel()]) {
             //attack
             
-            gainSmooth = (  ((1-alphaAttack) * thisSample) + (alphaAttack*gainSmoothPrevious) ) ;
+            gainSmooth = (  ((1-alphaAttack) * gainChange_dB) + (alphaAttack*gainSmoothPrevious[getChannel()]) ) ;
             
         }
         else {
             //release
-            gainSmooth = ( ((1-alphaRelease) * thisSample) + (alphaRelease*gainSmoothPrevious) ) ;
+            gainSmooth = ( ((1-alphaRelease) * gainChange_dB) + (alphaRelease*gainSmoothPrevious[getChannel()]) ) ;
         }
         
         //Convert to linear amplitude scalar _TODO not sure if I want to do this here
-        linA = pow(10,gainSmooth/20);
+        setLinA(pow(10,gainSmooth/20));
 
        //Update gainSmoothPrev used in the next sample of the loop
-        gainSmoothPrevious = gainSmooth;
+        gainSmoothPrevious[getChannel()] = gainSmooth;
         
     }
+    
     float getLinA(){
         return linA;
+    }
+   void setLinA(float a){
+       linA = a;
     }
     
 protected:
     float gainSmooth;
-    float gainSmoothPrevious = 0;
+    float gainSmoothPrevious[2] = {0}; // _TODO change the channel count dynamically based on input channels
+    float linA;
+    
+    //redundant; try to get these from compressor class _TODO
     float alphaAttack;
     float alphaRelease;
-    float linA;
+    int channel;
+    float gainChange_dB;
 };
 
 
@@ -188,6 +213,9 @@ public:
     compressor() {
         //standard vs multiband compressor
         setSplitInput(getBandType());
+        thisGainSmooth = new gainSmoothing();
+        thisLevelDetector = new levelDetector();
+        thisGainComputer = new gainComputer();
 
     }
     
@@ -207,9 +235,18 @@ public:
         
         setInputLevel(inputSample);
         setGainComputer();
+   
         setGainSmoothing();
         compressedOutput = thisGainSmooth->getLinA() * getCurrentSample();
         combineSplitOutput();
+
+        
+        return getOutputSample();
+    }
+    void setOutputSample(float o){
+        outputSample = o;
+    }
+    float getOutputSample(){
         return outputSample;
     }
     void combineSplitOutput(){
@@ -221,11 +258,11 @@ public:
             }break;
             case BASS:
             {
-                outputSample = compressedOutput + inputNotCompressed;
+                setOutputSample(compressedOutput + inputNotCompressed);
             }break;
             case TREBLE:
             {
-                outputSample = compressedOutput + inputNotCompressed;
+                setOutputSample(compressedOutput + inputNotCompressed);
             }break;
             case MULTI:
             {
@@ -284,16 +321,17 @@ public:
     
     void setInputLevel(float inputLevel){
         thisLevelDetector->setInputLevel(inputLevel);
-        xdB = thisLevelDetector->getInputLevel();
+        //xdB = thisLevelDetector->getInputLevel();
         thisGainComputer->setInputLevel(thisLevelDetector->getInputLevel());
     }
     
     void setGainComputer() {
         thisGainComputer->setStaticChar();
-        
+        gainChange_dB = thisGainComputer->getGainChangedB();
     }
     void setGainSmoothing(){
-        thisGainSmooth->setGainSmooth(thisGainComputer->getGainChange(), xdB);
+        thisGainSmooth->setGainChangedB(gainChange_dB);
+        thisGainSmooth->setGainSmooth();
     }
 
     void setAlphaA(float attackTime){
@@ -368,6 +406,7 @@ public:
     }
     void setChannelCount(int c){
         channelCount = c;
+        thisGainSmooth->setChannel(c);
     }
     void setCurrentChannel(int c) {
         channel = c;
@@ -397,12 +436,13 @@ protected:
     levelDetector* thisLevelDetector;
     gainComputer* thisGainComputer;
     gainSmoothing* thisGainSmooth;
+    RBJFilter* trebleOutput;
+    RBJFilter* bassOutput;
     
     bandType type;
     int bandCount;
     float crossoverFrequency;
-    RBJFilter* trebleOutput;
-    RBJFilter* bassOutput;
+
     
 };
 

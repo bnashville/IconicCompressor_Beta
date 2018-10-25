@@ -167,18 +167,8 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     // This is here to avoid people getting screaming feedback
     // when they first compile a plugin, but obviously you don't need to keep
     // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
-
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-
     
-    //load in values from the GUI knobs
+    //load in values from the GUI knobs - these were in the channel loop, moved them out. 
     float thresholdValue = *state->getRawParameterValue("threshold");
     float crossoverValue = *state->getRawParameterValue("crossover");
     float inputValue = *state->getRawParameterValue("input");
@@ -189,7 +179,7 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     
     float lowCutValue = *state->getRawParameterValue("lowCut");
     float highCutValue = *state->getRawParameterValue("highCut");
-
+    
     //send all these values to the compressor class. Would make sense to be able to send all in one function
     thisCompressor->setAlphaA(attackValue);
     thisCompressor->setAlphaR(releaseValue);
@@ -201,6 +191,20 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     
     // set the "units" of the level detector, either 'db' or 'linear'
     thisCompressor->setDetectorUnit(levelDetector::detectorUnit((levelDetector::detectorUnit::DB)));
+    
+    
+    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        buffer.clear (i, 0, buffer.getNumSamples());
+
+    // This is the place where you'd normally do the guts of your plugin's
+    // audio processing...
+    // Make sure to reset the state if your inner loop is processing
+    // the samples and the outer loop is handling the channels.
+    // Alternatively, you can process the samples with the channels
+    // interleaved by keeping the same state.
+
+    
+
 
     //loop through each channel, I.E. Left & Right, or 5.1, etc. -------------------------------------------------------------------
     
@@ -213,6 +217,7 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
        
             //apply input scalar here
             adjustedInput = buffer.getReadPointer(channel)[sample] * pow(10.f,inputValue/20.f);
+            
             compressorOutput = thisCompressor->tick(adjustedInput);
             
             //apply output scalar, write the output buffer.
