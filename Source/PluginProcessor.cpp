@@ -187,7 +187,8 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     thisCompressor->setRatio(ratioValue);
     thisCompressor->setCrossoverFrequency(crossoverValue);
     thisCompressor->setChannelCount(totalNumInputChannels);
-    thisCompressor->setSplitInput(compressor::bandType(compressor::bandType::NORMAL));
+    thisCompressor->setBandType(compressor::bandType(compressor::bandType::NORMAL));
+    //thisCompressor->setSplitInput(compressor::bandType(compressor::bandType::NORMAL));
     
     // set the "units" of the level detector, either 'db' or 'linear'
     thisCompressor->setDetectorUnit(levelDetector::detectorUnit((levelDetector::detectorUnit::DB)));

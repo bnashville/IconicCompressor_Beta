@@ -130,6 +130,19 @@ private:
 
 class gainSmoothing
 {
+    
+protected:
+    float gainSmooth;
+    float gainSmoothPrevious[2] = {0}; // _TODO change the channel count dynamically based on input channels
+    float linA;
+    float testVar;
+    
+    //redundant; try to get these from compressor class _TODO
+    float alphaAttack;
+    float alphaRelease;
+    int channel;
+    float gainChange_dB;
+    
 public:
  
     gainSmoothing() {}
@@ -155,7 +168,14 @@ public:
     int getChannel(){
         return channel;
     }
-    
+//    void setLinA(float a){
+//        linA = a;
+//    }
+    float getLinA(){
+        return testVar;
+    }
+
+   
     void setGainSmooth() {
         
         if(gainChange_dB < gainSmoothPrevious[getChannel()]) {
@@ -170,30 +190,15 @@ public:
         }
         
         //Convert to linear amplitude scalar _TODO not sure if I want to do this here
-        setLinA(pow(10,gainSmooth/20));
-
+        linA = pow(10.0f,gainSmooth/20.0f);
+        testVar = linA;
        //Update gainSmoothPrev used in the next sample of the loop
         gainSmoothPrevious[getChannel()] = gainSmooth;
         
     }
     
-    float getLinA(){
-        return linA;
-    }
-   void setLinA(float a){
-       linA = a;
-    }
-    
-protected:
-    float gainSmooth;
-    float gainSmoothPrevious[2] = {0}; // _TODO change the channel count dynamically based on input channels
-    float linA;
-    
-    //redundant; try to get these from compressor class _TODO
-    float alphaAttack;
-    float alphaRelease;
-    int channel;
-    float gainChange_dB;
+
+
 };
 
 
@@ -254,7 +259,7 @@ public:
         {
             case NORMAL:
             {
-                
+                setOutputSample(compressedOutput);
             }break;
             case BASS:
             {
