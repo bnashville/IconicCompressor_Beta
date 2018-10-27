@@ -181,15 +181,17 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     float highCutValue = *state->getRawParameterValue("highCut");
     
     //send all these values to the compressor class. Would make sense to be able to send all in one function
-    thisCompressor->setAlphaA(attackValue);
-    thisCompressor->setAlphaR(releaseValue);
+    thisCompressor->setAttack(attackValue);
+    thisCompressor->setRelease(releaseValue);
     thisCompressor->setThreshold(thresholdValue);
     thisCompressor->setRatio(ratioValue);
     thisCompressor->setCrossoverFrequency(crossoverValue);
-    thisCompressor->setChannelCount(totalNumInputChannels);
-    thisCompressor->setBandType(compressor::bandType(compressor::bandType::NORMAL));
-    //thisCompressor->setSplitInput(compressor::bandType(compressor::bandType::NORMAL));
     
+   // thisCompressor->setChannelCount(totalNumInputChannels); // for future revisions
+    
+    //optional parameters to be sent to subclasses of the compressor
+    thisCompressor->setBandType(multiband::bandType(multiband::bandType::NORMAL));
+
     // set the "units" of the level detector, either 'db' or 'linear'
     thisCompressor->setDetectorUnit(levelDetector::detectorUnit((levelDetector::detectorUnit::DB)));
     
@@ -204,9 +206,6 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
 
-    
-
-
     //loop through each channel, I.E. Left & Right, or 5.1, etc. -------------------------------------------------------------------
     
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
@@ -219,7 +218,7 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
             //apply input scalar here
             adjustedInput = buffer.getReadPointer(channel)[sample] * pow(10.f,inputValue/20.f);
             
-            compressorOutput = thisCompressor->tick(adjustedInput);
+            compressorOutput = thisCompressor->tick(adjustedInput, channel);
             
             //apply output scalar, write the output buffer.
             buffer.getWritePointer(channel)[sample] = compressorOutput * pow(10.f,outputValue/20.f);

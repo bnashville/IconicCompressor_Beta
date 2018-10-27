@@ -167,6 +167,7 @@
 		CE9A40B6D4AF290F24FBCAD9 /* IconicCompressor_Beta.component */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = IconicCompressor_Beta.component; sourceTree = BUILT_PRODUCTS_DIR; };
 		D38BC90A217F5C8B0020246D /* Filters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Filters.h; path = ../../Source/Filters.h; sourceTree = "<group>"; };
 		D38BC90B217F5CDB0020246D /* Compressor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Compressor.h; path = ../../Source/Compressor.h; sourceTree = "<group>"; };
+		D3A3D62921838B9F005A0A87 /* Compressor2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Compressor2.h; sourceTree = "<group>"; };
 		D8C4B8AA1CD8FF352D672B62 /* include_juce_audio_plugin_client_AU_1.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_plugin_client_AU_1.mm; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_AU_1.mm; sourceTree = SOURCE_ROOT; };
 		E25DD9EEB43E48194B38FEB5 /* juce_events */ = {isa = PBXFileReference; lastKnownFileType = text; name = juce_events; path = ../../../../../../Desktop/JUCE/modules/juce_events; sourceTree = SOURCE_ROOT; };
 		E886FFDCD496028DBFAB1E6E /* juce_audio_utils */ = {isa = PBXFileReference; lastKnownFileType = text; name = juce_audio_utils; path = ../../../../../../Desktop/JUCE/modules/juce_audio_utils; sourceTree = SOURCE_ROOT; };
@@ -319,6 +320,7 @@
 				30218E891DFC3B0EE44EABC2 /* PluginEditor.cpp */,
 				0046CD00FCC22EAB2F1734A8 /* PluginEditor.h */,
 				D38BC90B217F5CDB0020246D /* Compressor.h */,
+				D3A3D62921838B9F005A0A87 /* Compressor2.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";

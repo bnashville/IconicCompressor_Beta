@@ -2,17 +2,109 @@
 //  Compressor.h
 //  IconicCompressor_Beta
 //
-//  Created by Brian Cofer on 10/23/18.
+//  Created by Brian Cofer on 10/26/18.
 //
 
 #ifndef Compressor_h
 #define Compressor_h
 
-#include "PluginProcessor.h"
+class multiband
+{
+public:
+    enum bandType
+    {
+        NORMAL,
+        BASS,
+        TREBLE,
+        MULTI
+    };
+    
+    multiband(bandType type = bandType::NORMAL) {
+        //initialize RBJFILTER for splitting the signal into multiple parts.
+        trebleOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::HIGHPASS), 1, 44100);
+        bassOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::LOWPASS), 1, 44100);
+    }
+    ~multiband() {}
+    
+    float splitInputSample(float inputSample, float channel){
+        
+        if (type == NORMAL){
+            // do nothing
+            return inputSample;
+        }
+        else if  (type == BASS)  {
+            //run the signal through a filter to split into halves
+            
+            bassOutput->SetCutoff(crossoverFreq);
+            trebleOutput->SetCutoff(crossoverFreq);
+            bassOutput->SetQValue(.707);
+            trebleOutput->SetQValue(.707);
+            trebleOutput->SetSamplingRate(samplingRate);
+            bassOutput->SetSamplingRate(samplingRate);
+            
+            inputNotCompressed = trebleOutput-> Tick(inputSample, channel); //TODO 1 is not correct
+            return bassOutput->Tick(inputSample, channel);
+        }
+        else if (type == TREBLE) {
+            
+            bassOutput->SetCutoff(crossoverFreq);
+            trebleOutput->SetCutoff(crossoverFreq);
+            bassOutput->SetQValue(.707);
+            trebleOutput->SetQValue(.707);
+            trebleOutput->SetSamplingRate(samplingRate);
+            bassOutput->SetSamplingRate(samplingRate);
+            
+            return trebleOutput-> Tick(inputSample,channel); //TODO 1 is not correct
+            inputNotCompressed = bassOutput->Tick(inputSample,channel);
+        }
+        else { //true MULTIBAND options will go here in future versions
+            return inputSample;
+        }
+        
+    }
+    
+    
+    float combineIO(float linA){
+        switch(type)
+        {
+            case NORMAL:
+            {
+                return linA;
+            }break;
+            case BASS:
+            {
+                return linA + inputNotCompressed;
+            }break;
+            case TREBLE:
+            {
+                return linA + inputNotCompressed;
+            }break;
+            case MULTI:
+            {
+                return linA;
+            }break;
+        }
+    }
+    
+    void setSamplingRate(float Fs){
+        samplingRate = Fs;
+    }
+    void setCrossoverFrequency(float crossoverFrequency){
+        crossoverFreq = crossoverFrequency;
+    }
+protected:
+    RBJFilter* trebleOutput;
+    RBJFilter* bassOutput;
+    bandType type = bandType::NORMAL;
+    float crossoverFreq;
+    float samplingRate;
+    float inputNotCompressed;
+    
+};
+
 class levelDetector
 {
 public:
-   
     enum detectorUnit
     {
         LINEAR,
@@ -26,30 +118,23 @@ public:
         LCP,
         SMOOTH
     };
+    
+    
+    levelDetector(detectorUnit u = detectorUnit::DB) : u(u) {
+        
+    }
+    
+    ~levelDetector(){}
 
-    levelDetector(detectorUnit unit = detectorUnit::DB, float inputSample = 0) : u(unit) {
-        setInputLevel(inputSample);
-    }
     
-    ~levelDetector() {}
-    
-    void setDetectorUnit(detectorUnit newUnit)
-    {
-        u = newUnit;
-    }
-    
-    detectorUnit GetType()
-    {
-        return u;
-    }
-    
-    void setInputLevel(float s) {
-
+    float process(float inputSample) {
+        float inputLevel;
+        
         switch (u)
         {
             case LINEAR:
             {
-                inputLevel =  abs(s);
+                inputLevel =  abs(inputSample);
                 
                 if (inputLevel < -1) {
                     inputLevel = -1;
@@ -58,29 +143,23 @@ public:
                 
             case DB:
             {
-                inputLevel =  20.f * log10(abs(s)/1.f);
+                inputLevel =  20.f * log10(abs(inputSample)/1.f);
                 
                 if (inputLevel < -96) {
                     inputLevel = -96;
                 }
             } break;
         }
-        
-
-    }
-    
-    float getInputLevel() {
         return inputLevel;
     }
     
-    private:
-        detectorUnit u;
-        float inputLevel;
+    void setDetectorUnit(detectorUnit unit){
+        u = unit;
+    }
     
-        
-    };
-
-
+protected:
+    detectorUnit u;
+};
 
 class gainComputer
 {
@@ -88,21 +167,9 @@ public:
     gainComputer() {}
     ~gainComputer() {}
     
-     void setThreshold(float t){
-     thresholdValue = t;
-     }
-     void setRatio(float r){
-     ratioValue = r;
-     }
-
-    void setInputLevel(float i) {
-        inputLevel = i;
+    float process(float inputLevel){
+        float gainSC;
         
-    }
-    void setGainChangedB(float dB){
-        gainChange_dB = dB;
-    }
-    void setStaticChar(){
         if (inputLevel > thresholdValue) {
             gainSC = thresholdValue + (inputLevel - thresholdValue) / ratioValue; //Perform Downwards Compression
         }
@@ -110,346 +177,153 @@ public:
             gainSC = inputLevel; // Do not perform compression
         }
         
-        setGainChangedB(gainSC - inputLevel);
+        return gainSC - inputLevel;
         
     }
-    float getGainChangedB(){
-        return gainChange_dB;
+    
+    void setThreshold(float t){
+        thresholdValue = t;
     }
+    void setRatio(float r){
+        ratioValue = r;
+    }
+    
 protected:
-    float gainSC;
-    
-    
-private:
-    float thresholdValue; // can this be inherited from compressor?
+    float thresholdValue;
     float ratioValue;
-    float inputLevel;
-    float gainChange_dB;
+  
 };
-
 
 class gainSmoothing
 {
-    
-protected:
-    float gainSmooth;
-    float gainSmoothPrevious[2] = {0}; // _TODO change the channel count dynamically based on input channels
-    float linA;
-    float testVar;
-    
-    //redundant; try to get these from compressor class _TODO
-    float alphaAttack;
-    float alphaRelease;
-    int channel;
-    float gainChange_dB;
-    
 public:
- 
     gainSmoothing() {}
-    ~gainSmoothing() {}
+    ~gainSmoothing(){}
     
-    void setAlphaA(float alphaA){
-        alphaAttack = alphaA;
-    }
-    void setAlphaR(float alphaR){
-        alphaRelease = alphaR;
-    }
-    
-    void setChannel(int c){
-        channel = c;
-    }
-    void setGainChangedB(float gc){
-        gainChange_dB = gc;
-    }
-    float getGainChangedB() {
-        return gainChange_dB;
-    }
-    
-    int getChannel(){
-        return channel;
-    }
-//    void setLinA(float a){
-//        linA = a;
-//    }
-    float getLinA(){
-        return testVar;
-    }
-
-   
-    void setGainSmooth() {
+    float process(float gainChange_dB, int channel){
         
-        if(gainChange_dB < gainSmoothPrevious[getChannel()]) {
+        if(gainChange_dB < gainSmoothPrevious[channel]) {
             //attack
-            
-            gainSmooth = (  ((1-alphaAttack) * gainChange_dB) + (alphaAttack*gainSmoothPrevious[getChannel()]) ) ;
+            gainSmooth = (  ((1-alphaA) * gainChange_dB) + (alphaA*gainSmoothPrevious[channel]) ) ;
             
         }
         else {
             //release
-            gainSmooth = ( ((1-alphaRelease) * gainChange_dB) + (alphaRelease*gainSmoothPrevious[getChannel()]) ) ;
+            gainSmooth = ( ((1-alphaR) * gainChange_dB) + (alphaR*gainSmoothPrevious[channel]) ) ;
         }
         
-        //Convert to linear amplitude scalar _TODO not sure if I want to do this here
-        linA = pow(10.0f,gainSmooth/20.0f);
-        testVar = linA;
-       //Update gainSmoothPrev used in the next sample of the loop
-        gainSmoothPrevious[getChannel()] = gainSmooth;
+        //Update gainSmoothPrev for the next iteration
+        gainSmoothPrevious[channel] = gainSmooth;
+        
+        return gainSmooth;
         
     }
     
+    void setAttack(float attackTime){
+        alphaA = exp(-log(9) / (sampleRate * (attackTime / 1000) ));
+    }
+    void setRelease(float releaseTime){
+        alphaR = exp(-log(9) / (sampleRate * (releaseTime / 1000) ));
+    }
+    void setSamplingRate(float Fs){
+        sampleRate = Fs;
+    }
 
-
+protected:
+    float alphaA;
+    float alphaR;
+    float sampleRate;
+    float gainSmooth;
+    float gainSmoothPrevious[2]; // _TODO make the channel count dynamic in case > 2 channels.
+    
 };
-
 
 class compressor {
     
-   
-    
 public:
     
-    enum bandType
-    {
-        NORMAL,
-        BASS,
-        TREBLE,
-        MULTI
-    };
-    compressor() {
-        //standard vs multiband compressor
-        setSplitInput(getBandType());
-        thisGainSmooth = new gainSmoothing();
+    compressor(){
+        //initialize required subclasses
+        thisMultiband = new multiband(); //can we "if" this somehow _TODO
         thisLevelDetector = new levelDetector();
         thisGainComputer = new gainComputer();
-
+        thisGainSmooth = new gainSmoothing();
+    }
+    ~compressor(){
+        delete thisMultiband;
+        delete thisLevelDetector;
+        delete thisGainComputer;
+        delete thisGainSmooth;
     }
     
-    ~compressor() {
-        
-    }
+    float tick(float input, int channel){
     
-    void process() {
+        float inputSample = thisMultiband->splitInputSample(input, channel); //send sample to the multiband processor. Returns input if no multiband option
+        float inputLevel = thisLevelDetector->process(inputSample); //get input level, default is DB. Can be set to linear manually.
+        float gainChange_dB = thisGainComputer->process(inputLevel); //determine necessary gain change (db)
+        float gainSmooth = thisGainSmooth->process(gainChange_dB, channel); // apply attack/release times
+        float linA = pow(10.0f,gainSmooth/20.0f); //convert back to linear. This will probably change in the future as blocks become moveable.
+        float outputSample = thisMultiband->combineIO(linA); //send to multiband; returns input if no MB option set, otherwise, combine signals as needed.
         
-    }
-    
-    float tick(float input) {
-
-        //if bandtype is split, need to reassign my input to only one band, then sum later
-        setCurrentSample(input);
-        getSplitInput(inputSample);
-        
-        setInputLevel(inputSample);
-        setGainComputer();
+        return outputSample * input; //final step; multiply the calculated output value with the input sample to get compressed output
    
-        setGainSmoothing();
-        compressedOutput = thisGainSmooth->getLinA() * getCurrentSample();
-        combineSplitOutput();
-
-        
-        return getOutputSample();
-    }
-    void setOutputSample(float o){
-        outputSample = o;
-    }
-    float getOutputSample(){
-        return outputSample;
-    }
-    void combineSplitOutput(){
-        switch(type)
-        {
-            case NORMAL:
-            {
-                setOutputSample(compressedOutput);
-            }break;
-            case BASS:
-            {
-                setOutputSample(compressedOutput + inputNotCompressed);
-            }break;
-            case TREBLE:
-            {
-                setOutputSample(compressedOutput + inputNotCompressed);
-            }break;
-            case MULTI:
-            {
-                
-            }break;
-        }
-    }
-    void setSplitInput(bandType type = bandType::NORMAL){
-        
-        if (type == NORMAL){
-            // do nothing
-        }
-        else if ( (type == BASS) || (type == TREBLE) ) {
-            //run the signal through a filter to split into halves
-            trebleOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::HIGHPASS), 1, 44100);
-            bassOutput = new RBJFilter(RBJFilter::FilterType(RBJFilter::LOWPASS), 1, 44100);
-            bassOutput->SetCutoff(getCrossoverFrequency());
-            trebleOutput->SetCutoff(getCrossoverFrequency());
-            bassOutput->SetQValue(.707);
-            trebleOutput->SetQValue(.707);
-            trebleOutput->SetSamplingRate(getSamplingRate());
-            bassOutput->SetSamplingRate(getSamplingRate());
-        }
-        else { //MULTIBAND options will go here in future versions
-            
-        }
-
-    }
-    
-    void getSplitInput(float i) {
-        
-        
-        switch(type)
-        {
-            case NORMAL:
-            {
-                
-            }break;
-            case BASS:
-            {
-                inputNotCompressed = trebleOutput-> Tick(i, channel); //TODO 1 is not correct
-                inputSample = bassOutput->Tick(i, channel);
-            }break;
-            case TREBLE:
-            {
-                inputSample = trebleOutput-> Tick(i,channel); //TODO 1 is not correct
-                inputNotCompressed = bassOutput->Tick(i,channel);
-            }break;
-            case MULTI:
-            {
-                
-            }break;
-        }
-        
-    }
-    
-    void setInputLevel(float inputLevel){
-        thisLevelDetector->setInputLevel(inputLevel);
-        //xdB = thisLevelDetector->getInputLevel();
-        thisGainComputer->setInputLevel(thisLevelDetector->getInputLevel());
-    }
-    
-    void setGainComputer() {
-        thisGainComputer->setStaticChar();
-        gainChange_dB = thisGainComputer->getGainChangedB();
-    }
-    void setGainSmoothing(){
-        thisGainSmooth->setGainChangedB(gainChange_dB);
-        thisGainSmooth->setGainSmooth();
     }
 
-    void setAlphaA(float attackTime){
-        alphaA = exp(-log(9) / (sampleRate * (attackTime / 1000) ));
-        thisGainSmooth->setAlphaA(alphaA);
+    void setCurrentSample(float currentSample) { inputSample = currentSample; }
+    float getCurrentSample() { return inputSample; }
+    void SetSamplingRate(float Fs) {
+        thisGainSmooth->setSamplingRate(Fs);
+        thisMultiband->setSamplingRate(Fs);
     }
-    float getAlphaA() {
-        return alphaA;
+    void setBandType(multiband::bandType newTypeB) {
+        bType = newTypeB;
     }
-    void setAlphaR(float releaseTime){
-        alphaR = exp(-log(9) / (sampleRate * (releaseTime / 1000) ));
-        thisGainSmooth->setAlphaR(alphaR);
-    }
-    float getAlphaR(){
-        return alphaR;
-    }
-    void setThreshold(float threshold){
-        thresholdValue = threshold; // do I need the threshold anywhere other than static char?
-        thisGainComputer->setThreshold(threshold);
-    }
-    float getThreshold(){
-        return thresholdValue;
-    }
-    void setRatio(float ratio){
-        ratioValue = ratio; // do I need the ratio anywhere other than static char?
-        thisGainComputer->setRatio(ratio);
-    }
-    float getRatio() {
-        return ratioValue;
-    }
-    void setDetectorUnit(levelDetector::detectorUnit newUnit) {
-
-        thisLevelDetector->setDetectorUnit(newUnit);
-    }
-
-    float getInputLevel() {
-        return thisLevelDetector->getInputLevel();
-        
-    }
-  
-  void setCurrentSample(float currentSample){
-        inputSample = currentSample;
-    }
-    float getCurrentSample() {
-        return inputSample;
-    }
-  
-    void SetSamplingRate(float Fs)
-    {
-        sampleRate = Fs;
-        
-    }
-    float getSamplingRate() {
-        return sampleRate;
+    void setDetectorUnit(levelDetector::detectorUnit newUnit){
+        dUnit = newUnit;
     }
     
-    void setBandType(bandType newType){
-        type = newType;
-    }
-    bandType getBandType(){
-        return type;
-    }
-    void setBandCount(int c) {
-        bandCount = c;
-    }
-    
-    void setCrossoverFrequency(float f){
+    //void setBandCount(int c) { bandCount = c; }
+    void setCrossoverFrequency(float f) {
         crossoverFrequency = f;
+        thisMultiband->setCrossoverFrequency(f);
     }
-    float getCrossoverFrequency(){
-        return crossoverFrequency;
+    
+    void setThreshold(float t){
+        thresholdValue = t;
+        thisGainComputer->setThreshold(t);
     }
-    void setChannelCount(int c){
-        channelCount = c;
-        thisGainSmooth->setChannel(c);
+    void setRatio(float r){
+        ratioValue = r;
+        thisGainComputer->setRatio(r);
+    }
+
+    void setAttack(float attackTime){
+        thisGainSmooth->setAttack(attackTime);
+    }
+    void setRelease(float releaseTime){
+        thisGainSmooth->setRelease(releaseTime);
     }
     void setCurrentChannel(int c) {
         channel = c;
     }
     
 protected:
-    float alphaA;
-    float alphaR;
+    multiband* thisMultiband;
+    levelDetector* thisLevelDetector;
+    gainComputer* thisGainComputer;
+    gainSmoothing* thisGainSmooth;
+    
+    float sampleRate;
     float thresholdValue;
     float ratioValue;
     
     float inputSample;
-    float previousSample;
-    float sampleRate;
-    float gainChange_dB;
-    float inputLevel;
     float outputSample;
-    float compressedOutput;
     
-    float xdB;
-    float trebleOut;
-    float bassOut;
-    int channelCount = 1;
-    int channel = 1;
-    float inputNotCompressed;
-    
-    levelDetector* thisLevelDetector;
-    gainComputer* thisGainComputer;
-    gainSmoothing* thisGainSmooth;
-    RBJFilter* trebleOutput;
-    RBJFilter* bassOutput;
-    
-    bandType type;
-    int bandCount;
     float crossoverFrequency;
-
+    int channel;
+    multiband::bandType bType;
+    levelDetector::detectorUnit dUnit;
     
 };
-
-
 #endif /* Compressor_h */
