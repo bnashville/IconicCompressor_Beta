@@ -7,6 +7,15 @@
 
 #ifndef Compressor_h
 #define Compressor_h
+/*
+ 4 classes defined:
+ multiband: takes input sample and if desired, splits into a treble part and bass part. Still in development.
+ levelDetector: determines input level, default unit is dB, can also determine linear. Will also (I think) have options for various detector types
+ gainComputer: applies attack/release parameters
+ compressor: pulls everything together. Future versions will allow the level detector and gain computer blocks to be reversed. Still thinking this through.
+ 
+
+ */
 
 class multiband
 {
@@ -322,6 +331,7 @@ protected:
     
     float crossoverFrequency;
     int channel;
+    
     multiband::bandType bType;
     levelDetector::detectorUnit dUnit;
     
