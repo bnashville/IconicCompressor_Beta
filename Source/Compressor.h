@@ -165,9 +165,13 @@ public:
     void setDetectorUnit(detectorUnit unit){
         u = unit;
     }
+    void setDetectorType(detectorType type){
+        t = type;
+    }
     
 protected:
     detectorUnit u;
+    detectorType t;
 };
 
 class gainComputer
@@ -247,29 +251,105 @@ protected:
     
 };
 
+class sidechain {
+    
+public:
+    sidechain(){
+        lowCut = new RBJFilter(RBJFilter::FilterType(RBJFilter::HIGHPASS), 1, 44100);
+        highCut = new RBJFilter(RBJFilter::FilterType(RBJFilter::LOWPASS), 1, 44100);
+      
+        lowCut->SetQValue(.707);
+        highCut->SetQValue(.707);
+        
+        thisLevelDetector = new levelDetector();
+        
+    }
+    ~sidechain(){
+        delete thisLevelDetector;
+        delete highCut;
+        delete lowCut;
+    }
+    
+    void setHighCutoff(float f){
+        highCut->SetCutoff(f);
+    }
+    void setLowCutoff(float f){
+        lowCut->SetCutoff(f);
+    }
+    void setQ(float q){
+
+    }
+    
+    float process(float inputSample, int channel){
+        //take in the side chain
+        //apply high & low cut
+
+        float low = lowCut->Tick(inputSample, channel);
+        float high =  highCut->Tick(low, channel);
+        
+        return thisLevelDetector->process(high); //get input level, default is DB. Can be set to linear manually.
+        
+    }
+   
+
+        void setSamplingRate(float s){
+            lowCut->SetSamplingRate(s);
+            highCut->SetSamplingRate(s);
+        }
+    void setDetectorUnit(levelDetector::detectorUnit newUnit){
+        dUnit = newUnit;
+    }
+    void setDetectorType(levelDetector::detectorType newType){
+        dType = newType;
+    }
+    
+protected:
+
+    RBJFilter* highCut;
+    RBJFilter* lowCut;
+    levelDetector* thisLevelDetector;
+    levelDetector::detectorUnit dUnit;
+    levelDetector::detectorType dType;
+    
+};
+
+
 class compressor {
     
 public:
     
     compressor(){
         //initialize required subclasses
+        thisSidechain = new sidechain();
         thisMultiband = new multiband(); //can we "if" this somehow _TODO
-        thisLevelDetector = new levelDetector();
+      
         thisGainComputer = new gainComputer();
         thisGainSmooth = new gainSmoothing();
     }
     ~compressor(){
         delete thisMultiband;
-        delete thisLevelDetector;
         delete thisGainComputer;
         delete thisGainSmooth;
+        delete thisSidechain;
     }
     
     float tick(float input, int channel){
     
         float inputSample = thisMultiband->splitInputSample(input, channel); //send sample to the multiband processor. Returns input if no multiband option
-        float inputLevel = thisLevelDetector->process(inputSample); //get input level, default is DB. Can be set to linear manually.
-        float gainChange_dB = thisGainComputer->process(inputLevel); //determine necessary gain change (db)
+        
+        if (sidechainInput == 0) { //this should maybe be set a different way. Just a check to see if user has specified a different sidechain.
+            setSidechainInput(inputSample);
+        }
+        else {
+            setSidechainInput(inputSample);
+        }
+        
+        //maybe some of this should be called within the sidechain class? START HERE
+        
+        //send the input to the sidechain class. This class handles any EQ done to the sidechain, then outputs the input level in dB or linear.
+        float sidechainOutput = thisSidechain->process(sidechainInput, channel);
+        
+        float gainChange_dB = thisGainComputer->process(sidechainOutput); //determine necessary gain change (db)
         float gainSmooth = thisGainSmooth->process(gainChange_dB, channel); // apply attack/release times
         float linA = pow(10.0f,gainSmooth/20.0f); //convert back to linear. This will probably change in the future as blocks become moveable.
         float outputSample = thisMultiband->combineIO(linA); //send to multiband; returns input if no MB option set, otherwise, combine signals as needed.
@@ -283,12 +363,17 @@ public:
     void SetSamplingRate(float Fs) {
         thisGainSmooth->setSamplingRate(Fs);
         thisMultiband->setSamplingRate(Fs);
+        thisSidechain->setSamplingRate(Fs);
     }
     void setBandType(multiband::bandType newTypeB) {
         bType = newTypeB;
     }
     void setDetectorUnit(levelDetector::detectorUnit newUnit){
-        dUnit = newUnit;
+        //dUnit = newUnit;
+        thisSidechain->setDetectorUnit(newUnit);
+    }
+    void setDetectorType(levelDetector::detectorType newType){
+        thisSidechain->setDetectorType(newType);
     }
     
     //void setBandCount(int c) { bandCount = c; }
@@ -315,12 +400,21 @@ public:
     void setCurrentChannel(int c) {
         channel = c;
     }
-    
+    void setSidechainInput(float i){
+        sidechainInput = i;
+    }
+    void setHighCutoff(float hc){
+        thisSidechain->setHighCutoff(hc);
+    }
+    void setLowCutoff(float lc){
+        thisSidechain->setLowCutoff(lc);
+    }
+
 protected:
     multiband* thisMultiband;
-    levelDetector* thisLevelDetector;
     gainComputer* thisGainComputer;
     gainSmoothing* thisGainSmooth;
+    sidechain* thisSidechain;
     
     float sampleRate;
     float thresholdValue;
@@ -331,9 +425,10 @@ protected:
     
     float crossoverFrequency;
     int channel;
+    float sidechainInput = 0;
     
     multiband::bandType bType;
-    levelDetector::detectorUnit dUnit;
+    
     
 };
 #endif /* Compressor_h */

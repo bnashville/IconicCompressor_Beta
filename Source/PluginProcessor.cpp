@@ -186,6 +186,9 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     thisCompressor->setThreshold(thresholdValue);
     thisCompressor->setRatio(ratioValue);
     thisCompressor->setCrossoverFrequency(crossoverValue);
+    thisCompressor->setHighCutoff(highCutValue);
+    thisCompressor->setLowCutoff(lowCutValue);
+    
     
    // thisCompressor->setChannelCount(totalNumInputChannels); // for future revisions
     
@@ -194,7 +197,7 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
 
     // set the "units" of the level detector, either 'db' or 'linear'
     thisCompressor->setDetectorUnit(levelDetector::detectorUnit((levelDetector::detectorUnit::DB)));
-    
+    thisCompressor->setDetectorType(levelDetector::detectorType((levelDetector::detectorType::RMS))); //
     
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
@@ -218,6 +221,8 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
             //apply input scalar here
             adjustedInput = buffer.getReadPointer(channel)[sample] * pow(10.f,inputValue/20.f);
             
+            //set sidechain input sample
+            //thisCompressor->setSidechainInput(adjustedInput);
             compressorOutput = thisCompressor->tick(adjustedInput, channel);
             
             //apply output scalar, write the output buffer.

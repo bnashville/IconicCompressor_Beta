@@ -36,8 +36,8 @@ public:
     void sliderValueChanged(Slider* slider) override;
     void timerCallback() override;
     
-    int guiWidth = 900;
-    int guiHeight = 400;
+    int guiWidth = 825;
+    int guiHeight = 320;
     int guiCenter = guiWidth/2;
     
     int largeSliderSize = 100;
@@ -76,6 +76,7 @@ private:
     
     HackAudio::Button sidechainKnobsButton;
     HackAudio::Button compressorKnobsButton;
+    HackAudio::Button multibandKnobsButton;
     
     HackAudio::Button tubeButton;
     HackAudio::Button opticalButton;
@@ -115,7 +116,7 @@ private:
     HackAudio::FlexBox flexSideChain;
     HackAudio::FlexBox flexMix;
     HackAudio::FlexBox flexKnobsSidechain;
-    
+    HackAudio::FlexBox flexMultiband;
     
     ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> thresholdAttachment;
     ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> crossoverAttachment;

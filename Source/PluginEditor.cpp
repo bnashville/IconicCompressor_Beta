@@ -24,24 +24,31 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     //Settings for the input
-
-    sidechainKnobsButton.addListener(this);
-    sidechainKnobsButton.setButtonText("Sidechain");
-    sidechainKnobsButton.setConnectedEdges(Button::ConnectedOnLeft);
-    sidechainKnobsButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    sidechainKnobsButton.setSize(80,30);
-    sidechainKnobsButton.setRadioGroupId(4);
-    
-    addAndMakeVisible(sidechainKnobsButton);
-    
     compressorKnobsButton.addListener(this);
     compressorKnobsButton.setButtonText("Compressor");
     compressorKnobsButton.setConnectedEdges(Button::ConnectedOnRight);
     compressorKnobsButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    compressorKnobsButton.setSize(80,30);
+    compressorKnobsButton.setSize(100,30);
     compressorKnobsButton.setRadioGroupId(4);
     compressorKnobsButton.setToggleState(true, dontSendNotification);
     addAndMakeVisible(compressorKnobsButton);
+    
+    sidechainKnobsButton.addListener(this);
+    sidechainKnobsButton.setButtonText("Sidechain");
+    sidechainKnobsButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    sidechainKnobsButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    sidechainKnobsButton.setSize(90,30);
+    sidechainKnobsButton.setRadioGroupId(4);
+    addAndMakeVisible(sidechainKnobsButton);
+    
+    multibandKnobsButton.addListener(this);
+    multibandKnobsButton.setButtonText("Multiband");
+    multibandKnobsButton.setConnectedEdges(Button::ConnectedOnLeft);
+    multibandKnobsButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    multibandKnobsButton.setSize(90,30);
+    multibandKnobsButton.setRadioGroupId(4);
+    addAndMakeVisible(multibandKnobsButton);
+
 
     //------------------KNOB SETTINGS -----------------
     inputKnob.setSliderStyle(Slider::RotaryHorizontalVerticalDrag);
@@ -246,7 +253,7 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     feedForwardButton.setButtonText("Feed-Forward");
     feedForwardButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
     feedForwardButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    feedForwardButton.setSize(90,40);
+    feedForwardButton.setSize(110,40);
     feedForwardButton.setRadioGroupId(6);
     addAndMakeVisible(feedForwardButton);
     
@@ -312,9 +319,10 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     //Flex box for input source button
     flexButtons.addComponent(compressorKnobsButton);
     flexButtons.addComponent(sidechainKnobsButton);
+    flexButtons.addComponent(multibandKnobsButton);
     
     //flexButtons.setJustifyContent(juce::FlexBox::JustifyContent::center);
-    flexButtons.applyBounds(juce::Rectangle<int>(380,60,160,40));
+    flexButtons.applyBounds(juce::Rectangle<int>(280,60,260,40));
    
     // Flex Box for tremolo type Buttons
     flexTremType.addComponent(normalTremButton);
@@ -322,7 +330,7 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     flexTremType.addComponent(bassTremButton);
 
     //flexTremType.setJustifyContent(juce::FlexBox::JustifyContent::center);
-    flexTremType.applyBounds(juce::Rectangle<int>(500,140,270,40));
+    flexTremType.applyBounds(juce::Rectangle<int>(150,160,270,40));
     
     //Flex box for knobs
     flexKnobsCompressor.addComponent(inputKnob);
@@ -333,31 +341,34 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     flexKnobsCompressor.addComponent(outputKnob);
     flexKnobsCompressor.addComponent(mixKnob);
 
-    flexKnobsCompressor.applyBounds(juce::Rectangle<int>(100,140,(4*largeSliderSize)+(3*smallSliderSize)+knobSpacing,85));
+    flexKnobsCompressor.applyBounds(juce::Rectangle<int>(50,140,(4*largeSliderSize)+(3*smallSliderSize)+knobSpacing,85));
     
     // Flex box for sidechain knobs
     flexKnobsSidechain.addComponent(lowCutKnob);
     flexKnobsSidechain.addComponent(highCutKnob);
-    flexKnobsSidechain.addComponent(crossoverKnob);
-    flexKnobsSidechain.applyBounds(juce::Rectangle<int>(150,140,(3*smallSliderSize)+knobSpacing,85));
+  
+    flexKnobsSidechain.applyBounds(juce::Rectangle<int>(150,140,(2*smallSliderSize)+50,85));
    
     // Flex Box for analog Buttons
     flexLevelDetector.addComponent(peakScButton);
     flexLevelDetector.addComponent(rmsScButton);
     flexLevelDetector.addComponent(levelCorrectedButton);
     flexLevelDetector.addComponent(smoothButton);
-    flexLevelDetector.applyBounds(juce::Rectangle<int>(125,250,350,40));
+    flexLevelDetector.applyBounds(juce::Rectangle<int>(350,160,350,40));
+
 
     flexSystemDesign.addComponent(feedBackScButton);
     flexSystemDesign.addComponent(feedForwardButton);
     flexSystemDesign.addComponent(hybridButton);
-    flexSystemDesign.applyBounds(juce::Rectangle<int>(525,250,90*3,40));
+    flexSystemDesign.applyBounds(juce::Rectangle<int>(400,250,290,40));
     
     // flex order
     flexOrder.addComponent(ldOrderButton);
     flexOrder.addComponent(gcOrderButton);
-    flexOrder.applyBounds(juce::Rectangle<int>(150,300,140*2,40));
+    flexOrder.applyBounds(juce::Rectangle<int>(110,250,140*2,40));
     
+    flexMultiband.addComponent(crossoverKnob);
+    flexMultiband.applyBounds(juce::Rectangle<int>(350,160,140*2,40));
 
     //---------------------------- ATTACHMENTS --------------------------------
     thresholdAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"threshold", thresholdKnob);
@@ -418,6 +429,11 @@ void IconicCompressor_betaAudioProcessorEditor::paint (Graphics& g)
         trebleTremButton.setVisible(false);
         bassTremButton.setVisible(false);
         
+        peakScButton.setVisible(false);
+        rmsScButton.setVisible(false);
+        levelCorrectedButton.setVisible(false);
+        smoothButton.setVisible(false);
+        
         processor.defaultKnobView = 1;
     }
    
@@ -458,6 +474,11 @@ void IconicCompressor_betaAudioProcessorEditor::buttonClicked(Button* button)
         trebleTremButton.setVisible(false);
         bassTremButton.setVisible(false);
         
+        peakScButton.setVisible(false);
+        rmsScButton.setVisible(false);
+        levelCorrectedButton.setVisible(false);
+        smoothButton.setVisible(false);
+        
     }
     if (button == &sidechainKnobsButton){
       
@@ -471,11 +492,39 @@ void IconicCompressor_betaAudioProcessorEditor::buttonClicked(Button* button)
        
         lowCutKnob.setVisible(true);
         highCutKnob.setVisible(true);
-        crossoverKnob.setVisible(true);
         
+        normalTremButton.setVisible(false);
+        trebleTremButton.setVisible(false);
+        bassTremButton.setVisible(false);
+        
+        crossoverKnob.setVisible(false);
+        peakScButton.setVisible(true);
+        rmsScButton.setVisible(true);
+        levelCorrectedButton.setVisible(true);
+        smoothButton.setVisible(true);
+        
+    }
+    if(button == &multibandKnobsButton){
+        inputKnob.setVisible(false);
+        thresholdKnob.setVisible(false);
+        attackKnob.setVisible(false);
+        releaseKnob.setVisible(false);
+        ratioKnob.setVisible(false);
+        outputKnob.setVisible(false);
+        mixKnob.setVisible(false);
+        
+        lowCutKnob.setVisible(false);
+        highCutKnob.setVisible(false);
+        
+        crossoverKnob.setVisible(true);
         normalTremButton.setVisible(true);
         trebleTremButton.setVisible(true);
         bassTremButton.setVisible(true);
+        
+        peakScButton.setVisible(false);
+        rmsScButton.setVisible(false);
+        levelCorrectedButton.setVisible(false);
+        smoothButton.setVisible(false);
     }
     
     if (button == &peakScButton) {
