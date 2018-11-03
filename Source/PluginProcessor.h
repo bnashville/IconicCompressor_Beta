@@ -68,6 +68,7 @@ public:
     
     float multiplierAlgorithm = 8;
     int tremTypeAlgorithm = 0;
+    int systemDesign = 0;
 
 
     AudioProcessorValueTreeState& getState();

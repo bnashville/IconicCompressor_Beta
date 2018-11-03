@@ -214,7 +214,6 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     peakScButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
     peakScButton.setSize(70,40);
     peakScButton.setRadioGroupId(5);
-    peakScButton.setToggleState(true, dontSendNotification);
     addAndMakeVisible(peakScButton);
     
     rmsScButton.addListener(this);
@@ -239,23 +238,27 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     smoothButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
     smoothButton.setSize(90,40);
     smoothButton.setRadioGroupId(5);
+    smoothButton.setToggleState(true, dontSendNotification);
     addAndMakeVisible(smoothButton);
 
     
     // --------------FF/ FB -----------------
+     feedForwardButton.addListener(this);
+    feedForwardButton.setButtonText("Feed-Forward");
+    feedForwardButton.setConnectedEdges(Button::ConnectedOnRight);
+    feedForwardButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    feedForwardButton.setSize(110,40);
+    feedForwardButton.setRadioGroupId(6);
+    feedForwardButton.setToggleState(true, dontSendNotification);
+    addAndMakeVisible(feedForwardButton);
+    
+    feedBackScButton.addListener(this);
     feedBackScButton.setButtonText("Feed-Back");
-    feedBackScButton.setConnectedEdges(Button::ConnectedOnRight);
+    feedBackScButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
     feedBackScButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
     feedBackScButton.setSize(90,40);
     feedBackScButton.setRadioGroupId(6);
     addAndMakeVisible(feedBackScButton);
-    
-    feedForwardButton.setButtonText("Feed-Forward");
-    feedForwardButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    feedForwardButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    feedForwardButton.setSize(110,40);
-    feedForwardButton.setRadioGroupId(6);
-    addAndMakeVisible(feedForwardButton);
     
     hybridButton.addListener(this);
     hybridButton.setButtonText("Hybrid");
@@ -356,9 +359,8 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     flexLevelDetector.addComponent(smoothButton);
     flexLevelDetector.applyBounds(juce::Rectangle<int>(350,160,350,40));
 
-
-    flexSystemDesign.addComponent(feedBackScButton);
     flexSystemDesign.addComponent(feedForwardButton);
+    flexSystemDesign.addComponent(feedBackScButton);
     flexSystemDesign.addComponent(hybridButton);
     flexSystemDesign.applyBounds(juce::Rectangle<int>(400,250,290,40));
     
@@ -533,18 +535,21 @@ void IconicCompressor_betaAudioProcessorEditor::buttonClicked(Button* button)
     if (button == &rmsScButton) {
         processor.sideChainAlgorithm = 1;
     }
+    if (button == &levelCorrectedButton) {
+        processor.sideChainAlgorithm = 2;
+    }
     if (button == &smoothButton) {
-        processor.compressorAlgorithm = 0;
+        processor.sideChainAlgorithm = 3;
     }
    
-    if (button == &feedBackScButton) {
-        processor.compressorAlgorithm = 1;
-    }
     if (button == &feedForwardButton) {
-        processor.compressorAlgorithm = 2;
+        processor.systemDesign = 0;
+    }
+    if (button == &feedBackScButton) {
+        processor.systemDesign = 1;
     }
     if (button == &hybridButton) {
-        processor.compressorAlgorithm = 3;
+        processor.systemDesign = 2;
     }
 
     //------------TREMTYPE VALUES----------------------

@@ -36,7 +36,7 @@ IconicCompressor_betaAudioProcessor::IconicCompressor_betaAudioProcessor()
     
     state->createAndAddParameter("attack", "Attack", "Attack", NormalisableRange<float>(10.f, 800, .5), 20, nullptr, nullptr);
      state->createAndAddParameter("release", "Release", "Release", NormalisableRange<float>(50.f, 1100, .5), 50.0, nullptr, nullptr);
-    state->createAndAddParameter("ratio", "Ratio", "Ratio", NormalisableRange<float>(0.1, 20, 0.1), 3, nullptr, nullptr);
+    state->createAndAddParameter("ratio", "Ratio", "Ratio", NormalisableRange<float>(1, 20, 0.1), 3, nullptr, nullptr);
     state->createAndAddParameter("crossover", "Crossover", "Crossover", NormalisableRange<float>(30, 20000, 1), 2000.0, nullptr, nullptr);
     
     state->createAndAddParameter("lowCut", "LowCut", "LowCut", NormalisableRange<float>(20, 18000, 1), 20.0, nullptr, nullptr);
@@ -197,7 +197,20 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
 
     // set the "units" of the level detector, either 'db' or 'linear'
     thisCompressor->setDetectorUnit(levelDetector::detectorUnit((levelDetector::detectorUnit::DB)));
-    thisCompressor->setDetectorType(levelDetector::detectorType((levelDetector::detectorType::RMS))); //
+    
+    if (sideChainAlgorithm == 0){
+    thisCompressor->setDetectorType(gainSmoothing::detectorType((gainSmoothing::detectorType::PEAK))); //
+    }
+    else if (sideChainAlgorithm == 1){
+         thisCompressor->setDetectorType(gainSmoothing::detectorType((gainSmoothing::detectorType::RMS)));
+    }
+    else if (sideChainAlgorithm == 2){
+         thisCompressor->setDetectorType(gainSmoothing::detectorType((gainSmoothing::detectorType::LCP)));
+    }
+    else {
+         thisCompressor->setDetectorType(gainSmoothing::detectorType((gainSmoothing::detectorType::SMOOTH)));
+    }
+    
     
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
