@@ -395,10 +395,10 @@ protected:
 
 
 // ------------------------------------------------------------------------------------------------------------------------
-class sidechain {
+class sidechainEQ {
     
 public:
-    sidechain(){
+    sidechainEQ(){
         lowCut = new RBJFilter(RBJFilter::FilterType(RBJFilter::HIGHPASS), 1, 44100);
         highCut = new RBJFilter(RBJFilter::FilterType(RBJFilter::LOWPASS), 1, 44100);
       
@@ -406,7 +406,7 @@ public:
         highCut->SetQValue(.707);
      
     }
-    ~sidechain(){
+    ~sidechainEQ(){
         delete highCut;
         delete lowCut;
     }
@@ -459,7 +459,7 @@ public:
     
     compressor(){
         //initialize required subclasses
-        thisSidechain = new sidechain();
+        thisSidechain = new sidechainEQ();
         thisMultiband = new multiband(); //can we "if" this somehow _TODO
               thisLevelDetector = new levelDetector();
         thisGainComputer = new gainComputer();
@@ -620,7 +620,7 @@ protected:
     multiband* thisMultiband;
     gainComputer* thisGainComputer;
     levelDetector* thisLevelDetector;
-    sidechain* thisSidechain;
+    sidechainEQ* thisSidechain;
     
     float sampleRate;
     float thresholdValue;
