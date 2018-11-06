@@ -33,6 +33,7 @@ IconicCompressor_betaAudioProcessor::IconicCompressor_betaAudioProcessor()
     state->createAndAddParameter("input", "Input", "Input", NormalisableRange<float>(-48, 12, .1), 0, nullptr, nullptr);
     state->createAndAddParameter("output", "Output", "Output", NormalisableRange<float>(-48, 12, .1), 0, nullptr, nullptr);
     state->createAndAddParameter("threshold", "Threshold", "Threshold", NormalisableRange<float>(-48, 12, .1), 0, nullptr, nullptr);
+    state->createAndAddParameter("mix", "Mix", "Mix", NormalisableRange<float>(0, 100, .1), 100, nullptr, nullptr);
     
     state->createAndAddParameter("attack", "Attack", "Attack", NormalisableRange<float>(10.f, 800, .5), 20, nullptr, nullptr);
      state->createAndAddParameter("release", "Release", "Release", NormalisableRange<float>(50.f, 1100, .5), 50.0, nullptr, nullptr);
@@ -176,6 +177,7 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     float attackValue = *state->getRawParameterValue("attack");
     float releaseValue = *state->getRawParameterValue("release");
     float ratioValue = *state->getRawParameterValue("ratio");
+    float wetDryValue = *state->getRawParameterValue("mix");
     
     float lowCutValue = *state->getRawParameterValue("lowCut");
     float highCutValue = *state->getRawParameterValue("highCut");
@@ -196,7 +198,9 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     thisCompressor->setBandType(multiband::bandType(multiband::bandType::NORMAL));
 
     // set the "units" of the level detector, either 'db' or 'linear'
-    thisCompressor->setDetectorUnit(levelDetector::detectorUnit((levelDetector::detectorUnit::DB)));
+    //thisCompressor->setDetectorUnit(levelDetector::detectorUnit((levelDetector::detectorUnit::DB)));
+    
+    // should only need to do all these IF statements below if the values have changed... add a listener? 
     
     if (sideChainAlgorithm == 0){
     thisCompressor->setDetectorType(gainSmoothing::detectorType((gainSmoothing::detectorType::PEAK))); //
@@ -209,6 +213,16 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     }
     else {
          thisCompressor->setDetectorType(gainSmoothing::detectorType((gainSmoothing::detectorType::SMOOTH)));
+    }
+    
+    if (systemOrder == 0 ){
+        thisCompressor->setDetectorPlacement(levelDetector::detectorPlacement::LOGDOMAIN); // this should be default, don't need this line.
+    }
+    else if (systemOrder == 1){
+        thisCompressor->setDetectorPlacement(levelDetector::detectorPlacement::RETURNTOTHRESH);
+    }
+    else if (systemOrder == 2){
+        thisCompressor->setDetectorPlacement(levelDetector::detectorPlacement::RETURNTOZERO); 
     }
     
     
@@ -236,10 +250,11 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
             
             //set sidechain input sample
             //thisCompressor->setSidechainInput(adjustedInput);
-            compressorOutput = thisCompressor->tick(adjustedInput, channel);
+            compressorOutput = thisCompressor->tick(adjustedInput, channel) * pow(10.f,outputValue/20.f);
             
             //apply output scalar, write the output buffer.
-            buffer.getWritePointer(channel)[sample] = compressorOutput * pow(10.f,outputValue/20.f);
+            //buffer.getWritePointer(channel)[sample] = compressorOutput ;
+            buffer.getWritePointer(channel)[sample] = (compressorOutput * (wetDryValue/100)) + (adjustedInput * ( (100-wetDryValue) /100 ));
             
         } // sample loop
 

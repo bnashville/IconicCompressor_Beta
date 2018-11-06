@@ -247,7 +247,7 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     feedForwardButton.setButtonText("Feed-Forward");
     feedForwardButton.setConnectedEdges(Button::ConnectedOnRight);
     feedForwardButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    feedForwardButton.setSize(110,40);
+    feedForwardButton.setSize(110,30);
     feedForwardButton.setRadioGroupId(6);
     feedForwardButton.setToggleState(true, dontSendNotification);
     addAndMakeVisible(feedForwardButton);
@@ -256,7 +256,7 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     feedBackScButton.setButtonText("Feed-Back");
     feedBackScButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
     feedBackScButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    feedBackScButton.setSize(90,40);
+    feedBackScButton.setSize(90,30);
     feedBackScButton.setRadioGroupId(6);
     addAndMakeVisible(feedBackScButton);
     
@@ -264,26 +264,36 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     hybridButton.setButtonText("Hybrid");
     hybridButton.setConnectedEdges(Button::ConnectedOnLeft);
     hybridButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    hybridButton.setSize(90,40);
+    hybridButton.setSize(90,30);
     hybridButton.setRadioGroupId(6);
     addAndMakeVisible(hybridButton);
     
     //----------PLACEMENT ------------------
-    ldOrderButton.addListener(this);
-    ldOrderButton.setButtonText("Level Detector First");
-    ldOrderButton.setConnectedEdges(Button::ConnectedOnRight);
-    ldOrderButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    ldOrderButton.setSize(140,40);
-    ldOrderButton.setRadioGroupId(7);
-    addAndMakeVisible(ldOrderButton);
+    logOrderButton.addListener(this);
+    logOrderButton.setButtonText("Log-Domain");
+    logOrderButton.setConnectedEdges(Button::ConnectedOnRight);
+    logOrderButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    logOrderButton.setSize(100,30);
+    logOrderButton.setRadioGroupId(7);
+    logOrderButton.setToggleState(true, dontSendNotification);
+    addAndMakeVisible(logOrderButton);
     
-    gcOrderButton.addListener(this);
-    gcOrderButton.setButtonText("Gain Computer First");
-    gcOrderButton.setConnectedEdges(Button::ConnectedOnLeft);
-    gcOrderButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    gcOrderButton.setSize(140,40);
-    gcOrderButton.setRadioGroupId(7);
-    addAndMakeVisible(gcOrderButton);
+    rttOrderButton.addListener(this);
+    rttOrderButton.setButtonText("Return to Thres");
+    rttOrderButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    rttOrderButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    rttOrderButton.setSize(140,30);
+    rttOrderButton.setRadioGroupId(7);
+    addAndMakeVisible(rttOrderButton);
+    
+    rtzOrderButton.addListener(this);
+    rtzOrderButton.setButtonText("Return to Zero");
+    rtzOrderButton.setConnectedEdges(Button::ConnectedOnLeft);
+    rtzOrderButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    rtzOrderButton.setSize(140,30);
+    rtzOrderButton.setRadioGroupId(7);
+    addAndMakeVisible(rtzOrderButton);
+
 
     
     // ------------------------TOGGLE BUTTONS, ROW 2, COMPRESSION TYPE   -----------------
@@ -362,12 +372,13 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     flexSystemDesign.addComponent(feedForwardButton);
     flexSystemDesign.addComponent(feedBackScButton);
     flexSystemDesign.addComponent(hybridButton);
-    flexSystemDesign.applyBounds(juce::Rectangle<int>(400,250,290,40));
+    flexSystemDesign.applyBounds(juce::Rectangle<int>(475,250,290,40));
     
     // flex order
-    flexOrder.addComponent(ldOrderButton);
-    flexOrder.addComponent(gcOrderButton);
-    flexOrder.applyBounds(juce::Rectangle<int>(110,250,140*2,40));
+    flexOrder.addComponent(logOrderButton);
+    flexOrder.addComponent(rttOrderButton);
+    flexOrder.addComponent(rtzOrderButton);
+    flexOrder.applyBounds(juce::Rectangle<int>(50,250,380,40));
     
     flexMultiband.addComponent(crossoverKnob);
     flexMultiband.applyBounds(juce::Rectangle<int>(350,160,140*2,40));
@@ -378,6 +389,7 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     ratioAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"ratio", ratioKnob);
     outputAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"output", outputKnob);
     inputAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"input", inputKnob);
+    mixAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"mix", mixKnob);
  
     releaseAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"release", releaseKnob);
     attackAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"attack", attackKnob);
@@ -541,7 +553,7 @@ void IconicCompressor_betaAudioProcessorEditor::buttonClicked(Button* button)
     if (button == &smoothButton) {
         processor.sideChainAlgorithm = 3;
     }
-   
+   //---------------------------------------------
     if (button == &feedForwardButton) {
         processor.systemDesign = 0;
     }
@@ -550,6 +562,15 @@ void IconicCompressor_betaAudioProcessorEditor::buttonClicked(Button* button)
     }
     if (button == &hybridButton) {
         processor.systemDesign = 2;
+    }
+    if (button == &logOrderButton) {
+        processor.systemOrder = 0;
+    }
+    if (button == &rttOrderButton) {
+        processor.systemOrder = 1;
+    }
+    if (button == &rtzOrderButton) {
+        processor.systemOrder = 2;
     }
 
     //------------TREMTYPE VALUES----------------------
@@ -610,13 +631,13 @@ void IconicCompressor_betaAudioProcessorEditor::sliderValueChanged(Slider* slide
 void IconicCompressor_betaAudioProcessorEditor::timerCallback()
 {
     stopTimer();
-    inputLabel.setText("input", dontSendNotification);
-    attackLabel.setText("attack", dontSendNotification);
-    releaseLabel.setText("release", dontSendNotification);
-    thresholdLabel.setText("threshold", dontSendNotification);
-    ratioLabel.setText("ratio", dontSendNotification);
+    inputLabel.setText("Input", dontSendNotification);
+    attackLabel.setText("Attack", dontSendNotification);
+    releaseLabel.setText("Release", dontSendNotification);
+    thresholdLabel.setText("Threshold", dontSendNotification);
+    ratioLabel.setText("Ratio", dontSendNotification);
     crossoverLabel.setText("Crossover", dontSendNotification);
-    outputLabel.setText("output", dontSendNotification);
+    outputLabel.setText("Output", dontSendNotification);
     lowCutLabel.setText("Low Cut", dontSendNotification);
     highCutLabel.setText("High Cut", dontSendNotification);
     mixLabel.setText("Wet/Dry Mix", dontSendNotification);

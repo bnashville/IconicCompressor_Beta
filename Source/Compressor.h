@@ -111,6 +111,125 @@ protected:
     float inputNotCompressed;
     
 };
+
+// --------------------------------------------------------------------------------------------------------------------
+class gainSmoothing
+{
+public:
+    
+    enum detectorType
+    {
+        PEAK,
+        RMS,
+        LCP,
+        SMOOTH
+    };
+    
+    
+    gainSmoothing() {}
+    ~gainSmoothing(){}
+    
+    float process(float gainChange_dB, int channel){
+        
+        setGainChange_dB(gainChange_dB);
+        setChannel(channel);
+        
+        if (gainChange_dB ==0){
+            gainSmooth = 0;
+        }
+        else{
+            if (dType == PEAK){
+                gainSmooth = peakDetector();
+            }
+            else if (dType == RMS){
+                gainSmooth = rmsDetector();
+            }
+            else if (dType == LCP){
+                gainSmooth = lcpDetector();
+            }
+            else {
+                gainSmooth = smoothDetector();
+            }
+        }
+        
+        if (isnan(gainSmooth)){
+            gainSmooth = 0;
+        }
+        //Update gainSmoothPrev for the next iteration
+        gainSmoothPrevious[channel] = gainSmooth;
+        
+        return gainSmooth;
+        
+    }
+    
+    void setAttack(float attackTime){
+        alphaA = exp(-log(9) / (sampleRate * (attackTime / 1000) ));
+    }
+    void setRelease(float releaseTime){
+        alphaR = exp(-log(9) / (sampleRate * (releaseTime / 1000) ));
+    }
+    void setSamplingRate(float Fs){
+        sampleRate = Fs;
+    }
+    void setDetectorType(detectorType t){
+        dType = t;
+    }
+    void setGainChange_dB(float c){
+        gainChange_dB = c;
+    }
+    void setChannel(int c){
+        channel = c;
+    }
+    float peakDetector(){
+        return (alphaR*gainSmoothPrevious[channel]) + ((1-alphaA) * jmax((gainChange_dB - gainSmoothPrevious[channel]), 0.f));
+    }
+    float rmsDetector(){
+        if(gainChange_dB < gainSmoothPrevious[channel]) {
+            //attack
+            return -sqrt(((1.f-alphaA)*pow(gainChange_dB,2.f)) + (alphaA*pow(gainSmoothPrevious[channel],2.f)));
+            
+        }
+        else {
+            //release
+            return -sqrt(((1.f-alphaR)*pow(gainChange_dB,2.f)) + (alphaR*pow(gainSmoothPrevious[channel],2.f) ));
+        }
+    }
+    float lcpDetector(){
+        if(gainChange_dB > gainSmoothPrevious[channel]) {
+            //attack
+            return (  ((1-alphaA) * gainChange_dB) + (alphaA*gainSmoothPrevious[channel]) ) ;
+            
+        }
+        else {
+            //release
+            return (alphaR*gainSmoothPrevious[channel]) ;
+        }
+    }
+    float smoothDetector(){
+        if(gainChange_dB > gainSmoothPrevious[channel]) {
+            //attack
+            return (  ((1-alphaA) * gainChange_dB) + (alphaA*gainSmoothPrevious[channel]) ) ;
+            
+        }
+        else {
+            //release
+            return ( ((1-alphaR) * gainChange_dB) + (alphaR*gainSmoothPrevious[channel]) ) ;
+        }
+    }
+    
+protected:
+    float alphaA;
+    float alphaR;
+    float sampleRate;
+    float gainSmooth;
+    float gainChange_dB;
+    int channel;
+    float gainSmoothPrevious[2] = {0}; // _TODO make the channel count dynamic in case > 2 channels.
+    detectorType dType = detectorType(detectorType::SMOOTH);
+};
+
+
+
 //-------------------------------------LEVEL DETECTOR------------------------------------------------------------------
 class levelDetector
 {
@@ -127,11 +246,21 @@ public:
         HYBRID
     };
     
-    levelDetector(detectorUnit u = detectorUnit::DB) : u(u) {
+    enum detectorPlacement{
+        RETURNTOZERO,
+        RETURNTOTHRESH,
+        LOGDOMAIN
         
+    };
+
+    
+    levelDetector(detectorUnit u = detectorUnit::DB) : u(u) {
+         thisGainSmooth = new gainSmoothing();
     }
     
-    ~levelDetector(){}
+    ~levelDetector(){
+        delete thisGainSmooth;
+    }
 
     
     float process(float inputSample) {
@@ -158,21 +287,27 @@ public:
             {
                 inputLevel =  abs(inputSample);
                 
-                if (inputLevel < -1) {
-                    inputLevel = -1;
+                if (inputLevel > 1) {
+                    inputLevel = 1;
                 }
+                
             } break;
                 
             case DB:
             {
-                inputLevel =  20.f * log10(abs(inputSample)/1.f);
+               // inputLevel =  20.f * log10(abs(inputSample)/1.f);
                 
-                if (inputLevel < -96) {
+                if (inputSample < -96) {
                     inputLevel = -96;
+                }
+                else {
+                    inputLevel = inputSample;
                 }
             } break;
         }
-        return inputLevel;
+
+        return thisGainSmooth->process(inputLevel, channel); // apply attack/release times
+
     }
     
     void setDetectorUnit(detectorUnit unit){
@@ -184,17 +319,41 @@ public:
     detectorTopology getDetectorTopology(){
         return topology;
     }
+    void setDetectorPlacement(detectorPlacement dp){
+        dPlacement = dp;
+    }
+    detectorPlacement getDetectorPlacement(){
+        return dPlacement;
+    }
     void setPreviousOutput(float po){
         previousOutput = po;
     }
     float getPreviousOutput(){
         return previousOutput;
     }
+    void setChannel(int c){
+        channel = c;
+    }
+    void setSamplingRate(float Fs){
+        thisGainSmooth->setSamplingRate(Fs);
+    }
+    void setDetectorType(gainSmoothing::detectorType newType){
+        thisGainSmooth->setDetectorType(newType);
+    }
+    void setAttack(float a){
+        thisGainSmooth->setAttack(a);
+    }
+    void setRelease(float r){
+        thisGainSmooth->setRelease(r);
+    }
     
 protected:
+    gainSmoothing* thisGainSmooth;
     detectorUnit u = detectorUnit::DB;
     detectorTopology topology = detectorTopology::FEEDFORWARD;
+    detectorPlacement dPlacement = detectorPlacement::LOGDOMAIN;
     float previousOutput = 0.f;
+    int channel;
 };
 
 class gainComputer
@@ -231,114 +390,11 @@ protected:
   
 };
 
-class gainSmoothing
-{
-public:
-    
-    enum detectorType
-    {
-        PEAK,
-        RMS,
-        LCP,
-        SMOOTH
-    };
-    
-    
-    gainSmoothing() {}
-    ~gainSmoothing(){}
-    
-    float process(float gainChange_dB, int channel){
-        
-        setGainChange_dB(gainChange_dB);
-        setChannel(channel);
-        
-        if (dType == PEAK){
-            gainSmooth = peakDetector();
-        }
-        else if (dType == RMS){
-            gainSmooth = rmsDetector();
-        }
-        else if (dType == LCP){
-            gainSmooth = lcpDetector();
-        }
-        else {
-            gainSmooth = smoothDetector();
-        }
-        
-        
-        //Update gainSmoothPrev for the next iteration
-        gainSmoothPrevious[channel] = gainSmooth;
-        
-        return gainSmooth;
-        
-    }
-    
-    void setAttack(float attackTime){
-        alphaA = exp(-log(9) / (sampleRate * (attackTime / 1000) ));
-    }
-    void setRelease(float releaseTime){
-        alphaR = exp(-log(9) / (sampleRate * (releaseTime / 1000) ));
-    }
-    void setSamplingRate(float Fs){
-        sampleRate = Fs;
-    }
-    void setDetectorType(detectorType t){
-        dType = t;
-    }
-    void setGainChange_dB(float c){
-        gainChange_dB = c;
-    }
-    void setChannel(int c){
-        channel = c;
-    }
-    float peakDetector(){
-        return (alphaR*gainSmoothPrevious[channel]) + ((1-alphaA) * jmax((gainChange_dB - gainSmoothPrevious[channel]), 0.f));
-    }
-    float rmsDetector(){
-        if(gainChange_dB < gainSmoothPrevious[channel]) {
-            //attack
-            return -sqrt(((1.f-alphaA)*pow(gainChange_dB,2.f)) + (alphaA*pow(gainSmoothPrevious[channel],2.f)));
-          
-        }
-        else {
-            //release
-           return -sqrt(((1.f-alphaR)*pow(gainChange_dB,2.f)) + (alphaR*pow(gainSmoothPrevious[channel],2.f) ));
-        }
-    }
-    float lcpDetector(){
-        if(gainChange_dB > gainSmoothPrevious[channel]) {
-            //attack
-            return (  ((1-alphaA) * gainChange_dB) + (alphaA*gainSmoothPrevious[channel]) ) ;
-            
-        }
-        else {
-            //release
-            return (alphaR*gainSmoothPrevious[channel]) ;
-        }
-    }
-    float smoothDetector(){
-        if(gainChange_dB > gainSmoothPrevious[channel]) {
-            //attack
-            return (  ((1-alphaA) * gainChange_dB) + (alphaA*gainSmoothPrevious[channel]) ) ;
-            
-        }
-        else {
-            //release
-            return ( ((1-alphaR) * gainChange_dB) + (alphaR*gainSmoothPrevious[channel]) ) ;
-        }
-    }
+//--------------------------------------------------------------------------------------------------------------
 
-protected:
-    float alphaA;
-    float alphaR;
-    float sampleRate;
-    float gainSmooth;
-    float gainChange_dB;
-    int channel;
-    float gainSmoothPrevious[2]; // _TODO make the channel count dynamic in case > 2 channels.
-    detectorType dType = detectorType(detectorType::PEAK);
-};
 
+
+// ------------------------------------------------------------------------------------------------------------------------
 class sidechain {
     
 public:
@@ -348,12 +404,9 @@ public:
       
         lowCut->SetQValue(.707);
         highCut->SetQValue(.707);
-        
-        thisLevelDetector = new levelDetector();
-        
+     
     }
     ~sidechain(){
-        delete thisLevelDetector;
         delete highCut;
         delete lowCut;
     }
@@ -374,39 +427,28 @@ public:
 
         float low = lowCut->Tick(inputSample, channel);
         float high =  highCut->Tick(low, channel);
-        
-        return thisLevelDetector->process(high); //get input level, default is DB. Can be set to linear manually.
-        
+
+        return high;
+       
     }
    
-
+// _TODO many of these functions will need to be elsewhere or removed
         void setSamplingRate(float s){
             lowCut->SetSamplingRate(s);
             highCut->SetSamplingRate(s);
         }
-    void setDetectorUnit(levelDetector::detectorUnit newUnit){
-        dUnit = newUnit;
-    }
-    void setDetectorTopology(levelDetector::detectorTopology newTopology){
-        thisLevelDetector->setDetectorTopology(newTopology);
-    }
-    levelDetector::detectorTopology getDetectorTopology(){
-        return thisLevelDetector->getDetectorTopology();
-    }
-    
-    void setPreviousOutput(float po){
-        thisLevelDetector->setPreviousOutput(po);
-    }
-    float getPreviousOutput(){
-        return thisLevelDetector->getPreviousOutput();
+
+    void setThreshold(float t){
+        threshold = t;
     }
     
 protected:
 
     RBJFilter* highCut;
     RBJFilter* lowCut;
-    levelDetector* thisLevelDetector;
+    
     levelDetector::detectorUnit dUnit;
+    float threshold;
     
 };
 
@@ -419,68 +461,96 @@ public:
         //initialize required subclasses
         thisSidechain = new sidechain();
         thisMultiband = new multiband(); //can we "if" this somehow _TODO
-      
+              thisLevelDetector = new levelDetector();
         thisGainComputer = new gainComputer();
-        thisGainSmooth = new gainSmoothing();
+       
     }
     ~compressor(){
         delete thisMultiband;
         delete thisGainComputer;
-        delete thisGainSmooth;
         delete thisSidechain;
+        delete thisLevelDetector;
     }
     
     float tick(float input, int channel){
     
         float inputSample = thisMultiband->splitInputSample(input, channel); //send sample to the multiband processor. Returns input if no multiband option
         
-        if (sidechainInput == 0) { //this should maybe be set a different way. Just a check to see if user has specified a different sidechain.
+        //FUTURE USE: Placeholder to see if user has specified a different sidechain.
+        if (sidechainInput == 0) {
             setSidechainInput(inputSample);
         }
         else {
             setSidechainInput(inputSample);
         }
         
-        //maybe some of this should be called within the sidechain class? START HERE
+
+        //send the input to the sidechain class. This class handles any EQ done to the sidechain. Output is linear.
+        float processedSidechain = abs(thisSidechain->process(sidechainInput, channel));
         
-        //send the input to the sidechain class. This class handles any EQ done to the sidechain, then outputs the input level in dB or linear.
-        float sidechainOutput = thisSidechain->process(sidechainInput, channel);
+        float gainSmooth;
+        float sidechainOutput;
+        float linA;
         
-        float gainChange_dB = thisGainComputer->process(sidechainOutput); //determine necessary gain change (db)
-        float gainSmooth = thisGainSmooth->process(gainChange_dB, channel); // apply attack/release times
-        float linA = pow(10.0f,gainSmooth/20.0f); //convert back to linear. This will probably change in the future as blocks become moveable.
-        float outputSample = thisMultiband->combineIO(linA); //send to multiband; returns input if no MB option set, otherwise, combine signals as needed.
-        thisSidechain->setPreviousOutput(outputSample * input); //only needed if feedback topology
         
-        if (thisSidechain->getDetectorTopology() == levelDetector::HYBRID){ //(I think) this is how to implement the HYBRID topology as described
-            return thisSidechain->getPreviousOutput() * input;
-        }
-        else {
+        // Different signal-chain options depending on system design / topology
+        if (thisLevelDetector->getDetectorPlacement() == levelDetector::detectorPlacement::RETURNTOZERO){
             
+           //abs>levelDetector>dB>GainComp>+?>Output*Input
+            gainSmooth = 20.f * log10(abs(thisLevelDetector->process(processedSidechain))); //convert linear to dB
+            sidechainOutput = thisGainComputer->process(gainSmooth); //determine necessary gain change
+             linA = pow(10.0f,sidechainOutput/20.0f);
+        }
+        else if  (getDetectorPlacement() == levelDetector::detectorPlacement::RETURNTOTHRESH){
+
+            //abs>-Threshold>levelDetector>+Thresh>dB>gainComp...
+
+            float ldMinusThresh = thisLevelDetector->process(abs(processedSidechain) - pow(10.f,thresholdValue/20.f)); //subtract threshold from input & send to detector
+            float addThresh = ldMinusThresh+pow(10.f,thresholdValue/20.f); //add threshold back in
+            gainSmooth = 20.f * log10(addThresh); // convert to dB
+            sidechainOutput = thisGainComputer->process(gainSmooth); //send to gain computer
+             linA = pow(10.0f,sidechainOutput/20.0f);
+        }
+        else {
+            // log domain: abs>dB>gainComp>levelDetector>lin
+             float gC_dB = thisGainComputer->process(20.f*log10(processedSidechain)); //determine necessary gain change
+            sidechainOutput = (thisLevelDetector->process((20.f * log10(processedSidechain)) - gC_dB  ));
+             linA = -(pow(10.0f,sidechainOutput/20.0f));
+            //PEAK and RMS not working correctly
+            //START THERE ^
+        }
         
-        return outputSample * input; //final step; multiply the calculated output value with the input sample to get compressed output
+
+        //send to multiband to re-combine compressed treble/bass with uncompressed treble/bass. Returns input if no MB option set
+        float outputSample = thisMultiband->combineIO(linA);
+        
+        //Save our output into the levelDetector for the next run
+        thisLevelDetector->setPreviousOutput(outputSample * input);
+        
+        if (getDetectorTopology() == levelDetector::HYBRID){ //(I think) this is how to implement the HYBRID topology as described
+            return thisLevelDetector->getPreviousOutput() * input;
+        }
+        else {
+            return outputSample * input; //final step; multiply the calculated output value with the input sample to get compressed output
         }
     }
 
     void setCurrentSample(float currentSample) { inputSample = currentSample; }
     float getCurrentSample() { return inputSample; }
     void SetSamplingRate(float Fs) {
-        thisGainSmooth->setSamplingRate(Fs);
+        thisLevelDetector->setSamplingRate(Fs);
         thisMultiband->setSamplingRate(Fs);
         thisSidechain->setSamplingRate(Fs);
     }
     void setBandType(multiband::bandType newTypeB) {
         bType = newTypeB;
     }
-    void setDetectorUnit(levelDetector::detectorUnit newUnit){
-        //dUnit = newUnit;
-        thisSidechain->setDetectorUnit(newUnit);
-    }
     void setDetectorType(gainSmoothing::detectorType newType){
-        thisGainSmooth->setDetectorType(newType);
+        thisLevelDetector->setDetectorType(newType);
+        
     }
     void setTopology(levelDetector::detectorTopology newTopology){
-        thisSidechain->setDetectorTopology(newTopology);
+        thisLevelDetector->setDetectorTopology(newTopology);
     }
     
     //void setBandCount(int c) { bandCount = c; }
@@ -492,6 +562,7 @@ public:
     void setThreshold(float t){
         thresholdValue = t;
         thisGainComputer->setThreshold(t);
+        thisSidechain->setThreshold(t);
     }
     void setRatio(float r){
         ratioValue = r;
@@ -499,14 +570,14 @@ public:
     }
 
     void setAttack(float attackTime){
-        thisGainSmooth->setAttack(attackTime);
+        thisLevelDetector->setAttack(attackTime);
     }
     void setRelease(float releaseTime){
-        thisGainSmooth->setRelease(releaseTime);
+        thisLevelDetector->setRelease(releaseTime);
     }
     void setCurrentChannel(int c) {
         channel = c;
-        thisGainSmooth->setChannel(c);
+        thisLevelDetector->setChannel(c);
     }
     void setSidechainInput(float i){
         sidechainInput = i;
@@ -517,11 +588,38 @@ public:
     void setLowCutoff(float lc){
         thisSidechain->setLowCutoff(lc);
     }
+    void setDetectorPlacement(levelDetector::detectorPlacement dPlacement){
+        thisLevelDetector->setDetectorPlacement(dPlacement);
+        
+        if (dPlacement != levelDetector::LOGDOMAIN) {
+        thisLevelDetector->setDetectorUnit(levelDetector::detectorUnit::LINEAR);
+        }
+        else{
+        thisLevelDetector->setDetectorUnit(levelDetector::detectorUnit::DB);
+        }
+        
+    }
 
+//------------------------------------------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------------------------
+    void setDetectorTopology(levelDetector::detectorTopology newTopology){
+        thisLevelDetector->setDetectorTopology(newTopology);
+    }
+    levelDetector::detectorTopology getDetectorTopology(){
+        return thisLevelDetector->getDetectorTopology();
+    }
+    
+    levelDetector::detectorPlacement getDetectorPlacement(){
+        return thisLevelDetector->getDetectorPlacement();
+    }
+    
+    
+    
+    
 protected:
     multiband* thisMultiband;
     gainComputer* thisGainComputer;
-    gainSmoothing* thisGainSmooth;
+    levelDetector* thisLevelDetector;
     sidechain* thisSidechain;
     
     float sampleRate;

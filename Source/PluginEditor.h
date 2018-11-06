@@ -92,8 +92,9 @@ private:
     HackAudio::Button feedForwardButton;
     HackAudio::Button hybridButton;
 
-    HackAudio::Button ldOrderButton;
-    HackAudio::Button gcOrderButton;
+    HackAudio::Button logOrderButton;
+    HackAudio::Button rtzOrderButton;
+    HackAudio::Button rttOrderButton;
     
     HackAudio::Button normalTremButton;
     HackAudio::Button trebleTremButton;
