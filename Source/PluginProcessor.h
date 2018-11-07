@@ -70,6 +70,10 @@ public:
     int tremTypeAlgorithm = 0;
     int systemDesign = 0;
     int systemOrder = 0;
+    
+    //block diagram
+    int algorithm = 0;
+    int typeModifier = 0;
 
 
     AudioProcessorValueTreeState& getState();

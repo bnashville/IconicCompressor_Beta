@@ -382,6 +382,235 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     
     flexMultiband.addComponent(crossoverKnob);
     flexMultiband.applyBounds(juce::Rectangle<int>(350,160,140*2,40));
+    
+    
+    
+    //////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////
+    //////// Viewport Overview Diagram Display////////////////////////
+    
+    //bitBlock.setText("Bit", dontSendNotification);
+    bitBlock.setPlaceholder("Bit");
+    bitBlock.setBounds(0,0,64,60);
+    predelayBlock.setPlaceholder("Pre-Delay");
+    predelayBlock.setBounds(92,0,88,60);
+    reverbBlock.setPlaceholder("Reverb");
+    reverbBlock.setBounds(210,-10,110,80);
+    hpfBlock.setPlaceholder("HPF");
+    hpfBlock.setBounds(350,0,64,60);
+    lpfBlock.setPlaceholder("LPF");
+    lpfBlock.setBounds(440,0,64,60);
+    wetBlock.setPlaceholder("Wet");
+    wetBlock.setBounds(530,0,70,60);
+    wetBlock.setPostfix("%",dontSendNotification);
+    dryBlock.setPlaceholder("Dry");
+    dryBlock.setBounds(350,128,70,60);
+    dryBlock.setPostfix("%",dontSendNotification);
+    sumJunction.setSymbol(HackAudio::Diagram::Junction::Symbol::Add);
+    sumJunction.setBounds(620,10,40,40);
+    gainBlock.setPlaceholder("Gain");
+    gainBlock.setBounds(685,0,76,60);
+    gainBlock.setPostfix("dB",dontSendNotification);
+    
+    // Connect
+    overviewDiagram.addDiagramInput(bitBlock);
+    overviewDiagram.addDiagramInput(dryBlock);
+    overviewDiagram.connect(bitBlock,predelayBlock);
+    overviewDiagram.connect(predelayBlock,reverbBlock);
+    overviewDiagram.connect(reverbBlock,hpfBlock);
+    overviewDiagram.connect(hpfBlock,lpfBlock);
+    overviewDiagram.connect(lpfBlock,wetBlock);
+    overviewDiagram.connect(wetBlock,sumJunction);
+    overviewDiagram.connect(dryBlock,sumJunction);
+    overviewDiagram.connect(sumJunction,gainBlock);
+    overviewDiagram.addDiagramOutput(gainBlock);
+    
+    overviewDiagram.setName("Overview"); // Optional
+    
+    //overviewDiagram.setFont(HackAudio::Fonts::NowRegular.withHeight(HackAudio::FontHeights::Medium));
+    
+    ////// Sub-diagrams of the Overview Diagram ////////////////////
+    // First Arg - Clicked Block, Second Arg - diagram name
+    overviewDiagram.setSubDiagram(gainBlock,gainDiagram);
+    overviewDiagram.setSubDiagram(predelayBlock,predelayDiagram);
+    overviewDiagram.setSubDiagram(hpfBlock,hpfDiagram);
+    overviewDiagram.setSubDiagram(lpfBlock,lpfDiagram);
+    
+    // Set the correct sub-diagram on intialization
+    
+    if (processor.algorithm == 0){
+        // Schroeder
+        
+        overviewDiagram.setSubDiagram(reverbBlock,schDiagram);
+        
+        if (processor.typeModifier == 0){
+            schDiagram.comb_1_label.setVisible(false);
+            schDiagram.comb_2_label.setVisible(false);
+            schDiagram.comb_7_label.setVisible(false);
+            schDiagram.comb_8_label.setVisible(false);
+        }
+        if (processor.typeModifier == 1){
+            schDiagram.comb_1_label.setVisible(false);
+            schDiagram.comb_2_label.setVisible(true);
+            schDiagram.comb_7_label.setVisible(true);
+            schDiagram.comb_8_label.setVisible(false);
+        }
+        if (processor.typeModifier == 2){
+            schDiagram.comb_1_label.setVisible(true);
+            schDiagram.comb_2_label.setVisible(true);
+            schDiagram.comb_7_label.setVisible(true);
+            schDiagram.comb_8_label.setVisible(true);
+        }
+        
+    }
+    if (processor.algorithm == 1){
+        // Moorer
+        overviewDiagram.setSubDiagram(reverbBlock,morDiagram);
+    }
+    if (processor.algorithm == 2){
+        // FDN
+        overviewDiagram.setSubDiagram(reverbBlock,fdnDiagram);
+        fdnDiagram.fbGain_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
+        
+        if (processor.typeModifier == 0) {
+            fdnDiagram.matrix_label.setText("\\array 0 & 1 & 1 & 0 &// -1 & 0 & 0 & -1 &// 1 & 0 & 0 & -1 &// 0 & 1 & -1 & 0 \\end",sendNotification);
+            //fdnDiagram.fbGain_label.setText(String(0.25f*timeObject.getValue()+0.4f,2),sendNotification);
+            
+        }
+        if (processor.typeModifier == 1) {
+            fdnDiagram.matrix_label.setText("\\array 1 & 1 & 1 & 1 &// 1 & -1 & 1 & -1 &// 1 & 1 & -1 & -1 &// 1 & -1 & -1 & 1 \\end",sendNotification);
+            //fdnDiagram.fbGain_label.setText(String(0.15f*timeObject.getValue()+0.28f,2),sendNotification);
+        }
+        if (processor.typeModifier == 2) {
+            fdnDiagram.matrix_label.setText("\\array 1 & -1 & -1 & -1 &// -1 & 1 & -1 & -1 &// -1 & -1 & 1 & -1 &// -1 & -1 & -1 & 1 \\end",sendNotification);
+            //fdnDiagram.fbGain_label.setText(String(0.181f*timeObject.getValue()+0.29f,2),sendNotification);
+        }
+        
+    }
+    if (processor.algorithm == 3){
+        // Dattorro
+        overviewDiagram.setSubDiagram(reverbBlock,datDiagram);
+        
+        
+        if (processor.typeModifier == 0){
+            datDiagram.fbd_1_diag.fb_gain.setText("0.0",sendNotification);
+            datDiagram.fbd_1_diag.ff_gain.setText("1.0",sendNotification);
+            datDiagram.fbd_2_diag.fb_gain.setText("0.0",sendNotification);
+            datDiagram.fbd_2_diag.ff_gain.setText("1.0",sendNotification);
+            datDiagram.fbd_3_diag.fb_gain.setText("0.0",sendNotification);
+            datDiagram.fbd_3_diag.ff_gain.setText("1.0",sendNotification);
+        }
+        if (processor.typeModifier == 1){
+            datDiagram.fbd_1_diag.fb_gain.setText("0.05",sendNotification);
+            datDiagram.fbd_1_diag.ff_gain.setText("0.95",sendNotification);
+            datDiagram.fbd_2_diag.fb_gain.setText("0.05",sendNotification);
+            datDiagram.fbd_2_diag.ff_gain.setText("0.95",sendNotification);
+            datDiagram.fbd_3_diag.fb_gain.setText("0.05",sendNotification);
+            datDiagram.fbd_3_diag.ff_gain.setText("0.95",sendNotification);
+        }
+        if (processor.typeModifier == 2){
+            datDiagram.fbd_1_diag.fb_gain.setText("0.5",sendNotification);
+            datDiagram.fbd_1_diag.ff_gain.setText("0.5",sendNotification);
+            datDiagram.fbd_2_diag.fb_gain.setText("0.5",sendNotification);
+            datDiagram.fbd_2_diag.ff_gain.setText("0.5",sendNotification);
+            datDiagram.fbd_3_diag.fb_gain.setText("0.5",sendNotification);
+            datDiagram.fbd_3_diag.ff_gain.setText("0.5",sendNotification);
+        }
+    }
+    if (processor.algorithm == 4){
+        // Gardner
+        if (processor.typeModifier == 0){
+            overviewDiagram.setSubDiagram(reverbBlock,garSDiagram);
+        }
+        if (processor.typeModifier == 1){
+            overviewDiagram.setSubDiagram(reverbBlock,garMDiagram);
+            garMDiagram.napf_1_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
+        }
+        if (processor.typeModifier == 2){
+            overviewDiagram.setSubDiagram(reverbBlock,garLDiagram);
+            garLDiagram.napf_2_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////
+    // Over-writing the default name within the Bi-Quad Script
+    lpfDiagram.setName("Bi-Quad Low-Pass Filter");
+    hpfDiagram.setName("Bi-Quad High-Pass Filter");
+
+    // Moorer Text
+    morDiagram.comb_2_diag.fb_gain2.setText("0.01",sendNotification);
+    morDiagram.comb_3_diag.fb_gain2.setText("0.01",sendNotification);
+    morDiagram.comb_4_diag.fb_gain2.setText("0.01",sendNotification);
+    morDiagram.comb_5_diag.fb_gain2.setText("0.01",sendNotification);
+    morDiagram.comb_6_diag.fb_gain2.setText("0.01",sendNotification);
+    morDiagram.comb_7_diag.fb_gain2.setText("0.01",sendNotification);
+    
+    // Dattorro Text
+    
+
+  
+    garSDiagram.gain_1_label.setText("0.5",sendNotification);
+    garSDiagram.gain_2_label.setText("0.5",sendNotification);
+    garSDiagram.lpf_label.setText("4200",sendNotification);
+    garSDiagram.gain_1_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
+    garSDiagram.gain_2_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
+    
+    // Sub-diagram LPF
+    garSDiagram.lpf_diag.main_dry.setText(".053",sendNotification);
+    garSDiagram.lpf_diag.ff_1_gain.setText(".107",sendNotification);
+    garSDiagram.lpf_diag.ff_2_gain.setText(".053",sendNotification);
+    garSDiagram.lpf_diag.fb_1_gain.setText("1.24",sendNotification);
+    garSDiagram.lpf_diag.fb_2_gain.setText("-.46",sendNotification);
+    
+    garSDiagram.lpf_diag.setName("Low-Pass Filter, 4.2 kHz");
+    
+   
+    garMDiagram.gain_0_label.setText("0.5",sendNotification);
+    garMDiagram.gain_1_label.setText("0.5",sendNotification);
+    garMDiagram.gain_2_label.setText("0.5",sendNotification);
+    garMDiagram.lpf_label.setText("2500",sendNotification);
+    garMDiagram.gain_0_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
+    garMDiagram.gain_1_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
+    garMDiagram.gain_2_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
+    garMDiagram.napf_1_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
+    
+    // Sub-diagram LPF
+    garMDiagram.lpf_diag.main_dry.setText(".022",sendNotification);
+    garMDiagram.lpf_diag.ff_1_gain.setText(".043",sendNotification);
+    garMDiagram.lpf_diag.ff_2_gain.setText(".022",sendNotification);
+    garMDiagram.lpf_diag.fb_1_gain.setText("1.54",sendNotification);
+    garMDiagram.lpf_diag.fb_2_gain.setText("-.629",sendNotification);
+    
+    garMDiagram.lpf_diag.setName("Low-Pass Filter, 2.5 kHz");
+    
+   
+    garLDiagram.gain_0_label.setText("0.34",sendNotification);
+    garLDiagram.gain_1_label.setText("0.14",sendNotification);
+    garLDiagram.gain_2_label.setText("0.14",sendNotification);
+    garLDiagram.lpf_label.setText("2600",sendNotification);
+    garLDiagram.gain_0_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
+    garLDiagram.gain_1_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
+    garLDiagram.gain_2_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
+    garLDiagram.napf_2_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
+    
+    // Sub-diagram LPF
+    garLDiagram.lpf_diag.main_dry.setText(".023",sendNotification);
+    garLDiagram.lpf_diag.ff_1_gain.setText(".046",sendNotification);
+    garLDiagram.lpf_diag.ff_2_gain.setText(".023",sendNotification);
+    garLDiagram.lpf_diag.fb_1_gain.setText("1.52",sendNotification);
+    garLDiagram.lpf_diag.fb_2_gain.setText("-.618",sendNotification);
+    
+    garLDiagram.lpf_diag.setName("Low-Pass Filter, 2.6 kHz");
+    
+   
+    //
+    ////////////////////////////////////////////////////////////////
+    port.setBounds(10,310,guiWidth-20,(guiHeight/2)-30); //310
+    port.setDiagram(overviewDiagram);
+    addAndMakeVisible(port);
+    
+    
+    
 
     //---------------------------- ATTACHMENTS --------------------------------
     thresholdAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"threshold", thresholdKnob);

@@ -18,15 +18,21 @@
 
  */
 
+
+/*! Multiband class; splits the input signal into treble and bass parts to be processed individually. Combines back together after compression. */
 class multiband
 {
 public:
+    
+    /** An enum type.
+     *  Various options for splitting the signal by frequency.
+     */
     enum bandType
     {
-        NORMAL,
-        BASS,
-        TREBLE,
-        MULTI
+        NORMAL, /**< Default - No multiband processing */
+        BASS,   /**< Compress only the bass. */
+        TREBLE, /**< Compress only the treble. */
+        MULTI   /**< Future option for a true multiband compressor */
     };
     
     multiband(bandType type = bandType::NORMAL) {
@@ -36,6 +42,12 @@ public:
     }
     ~multiband() {}
     
+    //! Split signal into treble and bass parts.
+    /*!
+     Should be the first function called of a compressor. Splits the sidechain into a bass and treble part based on a user-defined crossover frequency.
+     This allows only half of the signal to be compressed, while the other half is stored to be recombined after processing.
+     Q is adjustable but in the current version, is static at .707.
+     */
     float splitInputSample(float inputSample, float channel){
         
         if (type == NORMAL){
@@ -73,7 +85,10 @@ public:
         
     }
     
-    
+    //! Combine compressed treble or bass parts.
+    /*!
+     Should be called after compression has occured to return a full spectrum signal to the processor.
+     */
     float combineIO(float linA){
         switch(type)
         {
@@ -113,16 +128,19 @@ protected:
 };
 
 // --------------------------------------------------------------------------------------------------------------------
+/*! Gain Smoothing Class; Takes in a detector type, attack, and release values and returns a smoothed gain value.
+ This is called from the Level Detector Class.
+ */
 class gainSmoothing
 {
 public:
     
     enum detectorType
     {
-        PEAK,
-        RMS,
-        LCP,
-        SMOOTH
+        PEAK,   /**< Peak Detection  */
+        RMS,    /**< RMS Detection  */
+        LCP,    /**< Level-Corrected Peak Detection  */
+        SMOOTH /**< Default: Smooth Peak Detection  */
     };
     
     
@@ -231,6 +249,9 @@ protected:
 
 
 //-------------------------------------LEVEL DETECTOR------------------------------------------------------------------
+/*! Level Detector Class; Takes in a detectorUnit, detectorTopology and detectorPlacement. Then calculates the appropriate level in DB or Linear amplitude,
+ and sends this value to the gain smoothing class.
+ */
 class levelDetector
 {
 public:
@@ -390,11 +411,12 @@ protected:
   
 };
 
-//--------------------------------------------------------------------------------------------------------------
-
-
 
 // ------------------------------------------------------------------------------------------------------------------------
+
+/*! SidechainEQ Class; Takes in the linear input value from the side chain, and if user has defined low or high cut options, eqs the sidechain.
+ Additional eq options could easily be added in here.
+ */
 class sidechainEQ {
     
 public:
@@ -452,16 +474,25 @@ protected:
     
 };
 
-
+/*! Compressor Class; The "root" of the compressor.
+ Takes in various compressor options, e.g. attack, release, threshold, etc.
+ Functionality based on this paper:
+ Giannoulis, D., Massberg, M., & Reiss, J. D. (2012). Digital Dynamic Range Compressor Design. Journal of the Audio Engineering Society, 60(6), 399–408.
+ and
+ Tarr, Eric. Hack Audio: An Introduction to Computer Programming and Digital Signal Processing in MATLAB. Routledge, 2018.
+ with additional options such as the multiband and sidechain eq added by Brian Cofer.
+ This and all sub classes created by Brian Cofer. Unrestricted use and modification is granted.
+ */
 class compressor {
     
 public:
     
+    //Compressor Initilization
     compressor(){
         //initialize required subclasses
         thisSidechain = new sidechainEQ();
         thisMultiband = new multiband(); //can we "if" this somehow _TODO
-              thisLevelDetector = new levelDetector();
+        thisLevelDetector = new levelDetector();
         thisGainComputer = new gainComputer();
        
     }
@@ -472,6 +503,17 @@ public:
         delete thisLevelDetector;
     }
     
+    /*! The main function.
+     
+    1) Takes an input sample, splits bass and treble if needed.
+    2) EQ the sidechain if requested.
+    3) Process the signal according to system design options, either the level detector first, or the gain computer.
+    4) If the sample was split into bass and treble, recombine the compressed band with the uncompressed band.
+    5) Save the output to the level detector for the next run
+    6) Consider detector topology again if needed. Hybrid topology returns the previousOutput * input. Others simply return output * input.
+     
+     *Input gain, output gain and wet/dry mix are not a part of this class, though this may be added later. Those are currently set before/after calling the class.
+     */
     float tick(float input, int channel){
     
         float inputSample = thisMultiband->splitInputSample(input, channel); //send sample to the multiband processor. Returns input if no multiband option
@@ -485,7 +527,7 @@ public:
         }
         
 
-        //send the input to the sidechain class. This class handles any EQ done to the sidechain. Output is linear.
+        //send the input to the sidechainEQ class. This class handles any EQ done to the sidechain. Output is linear.
         float processedSidechain = abs(thisSidechain->process(sidechainInput, channel));
         
         float gainSmooth;
@@ -612,10 +654,7 @@ public:
     levelDetector::detectorPlacement getDetectorPlacement(){
         return thisLevelDetector->getDetectorPlacement();
     }
-    
-    
-    
-    
+  
 protected:
     multiband* thisMultiband;
     gainComputer* thisGainComputer;

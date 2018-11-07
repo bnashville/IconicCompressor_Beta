@@ -37,7 +37,7 @@ public:
     void timerCallback() override;
     
     int guiWidth = 825;
-    int guiHeight = 320;
+    int guiHeight = 620;
     int guiCenter = guiWidth/2;
     
     int largeSliderSize = 100;
@@ -131,6 +131,42 @@ private:
     ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> lowCutAttachment;
     ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> highCutAttachment;
     ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> mixAttachment;
+    
+    
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    ////// Block Diagram Area /////////////////////////////////////////
+    
+    // Creating all of the Diagram Objects
+    HackAudio::Viewport port;
+    HackAudio::Diagram overviewDiagram;
+    HackAudio::Diagrams::Gain gainDiagram;
+    HackAudio::Diagrams::Predelay predelayDiagram;
+    HackAudio::Diagrams::BiquadFilter lpfDiagram;
+    HackAudio::Diagrams::BiquadFilter hpfDiagram;
+    HackAudio::Diagrams::SchroederReverb schDiagram;
+    HackAudio::Diagrams::MoorerReverb morDiagram;
+    HackAudio::Diagrams::EarlyReflections morERDiagram;
+    HackAudio::Diagrams::LPCombFilter morCFDiagram;
+    HackAudio::Diagrams::FDNReverb fdnDiagram;
+    HackAudio::Diagrams::DattorroReverb datDiagram;
+    HackAudio::Diagrams::GardnersmallReverb garSDiagram;
+    HackAudio::Diagrams::GardnermediumReverb garMDiagram;
+    HackAudio::Diagrams::GardnerlargeReverb garLDiagram;
+    
+    // Various blocks as part of the Overview diagram
+    HackAudio::Label bitBlock;
+    HackAudio::Label predelayBlock;
+    HackAudio::Label reverbBlock;
+    HackAudio::Label lpfBlock;
+    HackAudio::Label hpfBlock;
+    HackAudio::Label gainBlock;
+    HackAudio::Diagram::Junction sumJunction;
+    HackAudio::Label dryBlock;
+    HackAudio::Label wetBlock;
+    
+    
+    
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
 
