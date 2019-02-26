@@ -61,15 +61,15 @@ public:
     
     //my variables
 
-    int compressorAlgorithm = 0;
-    int rateSourceAlgorithm = 1;
+    //int compressorAlgorithm = 0;
+    //int rateSourceAlgorithm = 1;
     int defaultKnobView = 0;
-    int sideChainAlgorithm = 3;
+    //int sideChainAlgorithm = 3;
     
-    float multiplierAlgorithm = 8;
-    int tremTypeAlgorithm = 0;
-    int systemDesign = 0;
-    int systemOrder = 0;
+    //float multiplierAlgorithm = 8;
+    //int tremTypeAlgorithm = 0;
+    //int systemDesign = 0;
+    //int systemOrder = 0;
     
     //block diagram
     int algorithm = 0;

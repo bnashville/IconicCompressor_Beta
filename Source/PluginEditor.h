@@ -38,6 +38,7 @@ public:
     void buttonClicked (Button* button) override;
     void sliderValueChanged(Slider* slider) override;
     void timerCallback() override;
+     void guiTab(int &ref);
     
     int guiWidth = 825;
     int guiHeight = 420;

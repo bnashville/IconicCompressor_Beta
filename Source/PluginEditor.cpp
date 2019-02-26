@@ -331,34 +331,8 @@ void IconicCompressor_betaAudioProcessorEditor::paint (Graphics& g)
     g.setColour (juce::Colours::orange);//g.setColour (Colours::cyan);
     g.drawFittedText ("analog",0, 20, 970, 25, Justification::centred, 1.0);
     
-    if (processor.defaultKnobView == 0) {
-        inputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
-        ratioKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
-        attackKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
-        releaseKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
-        outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
-        
-        inputKnob.setVisible(true);
-        outputKnob.setVisible(true);
-        
-        attackKnob.setVisible(true);
-        releaseKnob.setVisible(true);
-        
-        ratioFourToggle.setVisible(true);
-        ratioEightToggle.setVisible(true);
-        ratioTwelveToggle.setVisible(true);
-        ratioTwentyToggle.setVisible(true);
-        ratioAllToggle.setVisible(true);
-        
-        ratioKnob.setVisible(false);
-        
-        mixKnob.setVisible(false);
-        thresholdKnob.setVisible(false);
-        overEasyButton.setVisible(false);
-        processor.defaultKnobView = 1;
-    }
-    
-    
+    guiTab(processor.defaultKnobView);
+
 }
 
 void IconicCompressor_betaAudioProcessorEditor::resized()
@@ -372,122 +346,20 @@ void IconicCompressor_betaAudioProcessorEditor::buttonClicked(Button* button)
     
     //---------WAVETYPE VALUES-------------------
     if (button == &fetCompToggle) {
-        
-        // need to remove analog toggle buttons & add digital buttons
-        
-        overEasyButton.setVisible(false);
-        thresholdKnob.setVisible(false);
-        mixKnob.setVisible(false);
-        
-        inputKnob.setVisible(false);
-        outputKnob.setVisible(false);
-        attackKnob.setVisible(false);
-        releaseKnob.setVisible(false);
-        ratioKnob.setVisible(false);
-        
-        inputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
-        //ratioKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
-        attackKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
-        releaseKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
-        outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
-        
-        inputKnob.setVisible(true);
-        outputKnob.setVisible(true);
-        attackKnob.setVisible(true);
-        releaseKnob.setVisible(true);
-        
-        ratioFourToggle.setVisible(true);
-        ratioEightToggle.setVisible(true);
-        ratioTwelveToggle.setVisible(true);
-        ratioTwentyToggle.setVisible(true);
-        ratioAllToggle.setVisible(true);
-        
-        
+        processor.defaultKnobView = 0;
+        guiTab(processor.defaultKnobView);
     }
     if (button == &opticalCompToggle){
-        attackKnob.setVisible(false);
-        releaseKnob.setVisible(false);
-        ratioKnob.setVisible(false);
-        
-        mixKnob.setVisible(false);
-        overEasyButton.setVisible(false);
-        
-        inputKnob.setVisible(false);
-        thresholdKnob.setVisible(false);
-        outputKnob.setVisible(false);
-        
-        ratioTwentyToggle.setVisible(false);
-        ratioTwelveToggle.setVisible(false);
-        ratioEightToggle.setVisible(false);
-        ratioFourToggle.setVisible(false);
-        ratioAllToggle.setVisible(false);
-        
-        inputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
-        thresholdKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
-        outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
-        
-        inputKnob.setVisible(true);
-        thresholdKnob.setVisible(true);
-        outputKnob.setVisible(true);
-        
-        
+        processor.defaultKnobView = 1;
+        guiTab(processor.defaultKnobView);
     }
     if(button == &vcaCompToggle){
-        inputKnob.setVisible(false);
-        attackKnob.setVisible(false);
-        releaseKnob.setVisible(false);
-        mixKnob.setVisible(false);
-        
-        thresholdKnob.setVisible(false);
-        overEasyButton.setVisible(false);
-        ratioKnob.setVisible(false);
-        outputKnob.setVisible(false);
-        
-        ratioTwentyToggle.setVisible(false);
-        ratioTwelveToggle.setVisible(false);
-        ratioEightToggle.setVisible(false);
-        ratioFourToggle.setVisible(false);
-        ratioAllToggle.setVisible(false);
-        
-        thresholdKnob.setColour(HackAudio::foregroundColourId, juce::Colours::firebrick);
-        ratioKnob.setColour(HackAudio::foregroundColourId, juce::Colours::skyblue);
-        outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::seagreen);
-        
-        thresholdKnob.setVisible(true);
-        overEasyButton.setVisible(true);
-        ratioKnob.setVisible(true);
-        outputKnob.setVisible(true);
-        
-        
+        processor.defaultKnobView = 2;
+        guiTab(processor.defaultKnobView);
     }
     if(button == &tubeCompToggle){
-        
-        outputKnob.setVisible(false);
-        ratioKnob.setVisible(false);
-        mixKnob.setVisible(false);
-        overEasyButton.setVisible(false);
-        
-        inputKnob.setVisible(false);
-        thresholdKnob.setVisible(false);
-        attackKnob.setVisible(false);
-        releaseKnob.setVisible(false);
-        
-        ratioTwentyToggle.setVisible(false);
-        ratioTwelveToggle.setVisible(false);
-        ratioEightToggle.setVisible(false);
-        ratioFourToggle.setVisible(false);
-        ratioAllToggle.setVisible(false);
-        
-        inputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
-        thresholdKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
-        attackKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
-        releaseKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
-        
-        inputKnob.setVisible(true);
-        thresholdKnob.setVisible(true);
-        attackKnob.setVisible(true);
-        releaseKnob.setVisible(true);
-        
+        processor.defaultKnobView = 3;
+        guiTab(processor.defaultKnobView);
     }
 }
 void IconicCompressor_betaAudioProcessorEditor::sliderValueChanged(Slider* slider){
@@ -531,4 +403,134 @@ void IconicCompressor_betaAudioProcessorEditor::timerCallback()
     
 }
 
-
+void IconicCompressor_betaAudioProcessorEditor::guiTab(int &selectedView){
+    if (selectedView == 0) {
+        
+        fetCompToggle.setToggleState(true, dontSendNotification);
+        opticalCompToggle.setToggleState(false, dontSendNotification);
+        tubeCompToggle.setToggleState(false, dontSendNotification);
+        vcaCompToggle.setToggleState(false, dontSendNotification);
+        
+        inputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
+        ratioKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        attackKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
+        releaseKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
+        outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
+        
+        inputKnob.setVisible(true);
+        outputKnob.setVisible(true);
+        
+        attackKnob.setVisible(true);
+        releaseKnob.setVisible(true);
+        
+        ratioFourToggle.setVisible(true);
+        ratioEightToggle.setVisible(true);
+        ratioTwelveToggle.setVisible(true);
+        ratioTwentyToggle.setVisible(true);
+        ratioAllToggle.setVisible(true);
+        
+        ratioKnob.setVisible(false);
+        
+        mixKnob.setVisible(false);
+        thresholdKnob.setVisible(false);
+        overEasyButton.setVisible(false);
+        
+    }
+    
+      if (selectedView == 1) {
+          fetCompToggle.setToggleState(false, dontSendNotification);
+          opticalCompToggle.setToggleState(true, dontSendNotification);
+          tubeCompToggle.setToggleState(false, dontSendNotification);
+          vcaCompToggle.setToggleState(false, dontSendNotification);
+          
+          attackKnob.setVisible(false);
+          releaseKnob.setVisible(false);
+          ratioKnob.setVisible(false);
+          
+          mixKnob.setVisible(false);
+          overEasyButton.setVisible(false);
+          
+          inputKnob.setVisible(false);
+          thresholdKnob.setVisible(false);
+          outputKnob.setVisible(false);
+          
+          ratioTwentyToggle.setVisible(false);
+          ratioTwelveToggle.setVisible(false);
+          ratioEightToggle.setVisible(false);
+          ratioFourToggle.setVisible(false);
+          ratioAllToggle.setVisible(false);
+          
+          inputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+          thresholdKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+          outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+          
+          inputKnob.setVisible(true);
+          thresholdKnob.setVisible(true);
+          outputKnob.setVisible(true);
+          
+      }
+     if (selectedView == 2) {
+         fetCompToggle.setToggleState(false, dontSendNotification);
+         opticalCompToggle.setToggleState(false, dontSendNotification);
+         vcaCompToggle.setToggleState(true, dontSendNotification);
+         tubeCompToggle.setToggleState(false, dontSendNotification);
+         
+         
+         inputKnob.setVisible(false);
+         attackKnob.setVisible(false);
+         releaseKnob.setVisible(false);
+         mixKnob.setVisible(false);
+         
+         thresholdKnob.setVisible(false);
+         overEasyButton.setVisible(false);
+         ratioKnob.setVisible(false);
+         outputKnob.setVisible(false);
+         
+         ratioTwentyToggle.setVisible(false);
+         ratioTwelveToggle.setVisible(false);
+         ratioEightToggle.setVisible(false);
+         ratioFourToggle.setVisible(false);
+         ratioAllToggle.setVisible(false);
+         
+         thresholdKnob.setColour(HackAudio::foregroundColourId, juce::Colours::firebrick);
+         ratioKnob.setColour(HackAudio::foregroundColourId, juce::Colours::skyblue);
+         outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::seagreen);
+         
+         thresholdKnob.setVisible(true);
+         overEasyButton.setVisible(true);
+         ratioKnob.setVisible(true);
+         outputKnob.setVisible(true);
+     }
+    if(selectedView == 3){
+        fetCompToggle.setToggleState(false, dontSendNotification);
+        opticalCompToggle.setToggleState(false, dontSendNotification);
+        vcaCompToggle.setToggleState(false, dontSendNotification);
+        tubeCompToggle.setToggleState(true, dontSendNotification);
+        
+        outputKnob.setVisible(false);
+        ratioKnob.setVisible(false);
+        mixKnob.setVisible(false);
+        overEasyButton.setVisible(false);
+        
+        inputKnob.setVisible(false);
+        thresholdKnob.setVisible(false);
+        attackKnob.setVisible(false);
+        releaseKnob.setVisible(false);
+        
+        ratioTwentyToggle.setVisible(false);
+        ratioTwelveToggle.setVisible(false);
+        ratioEightToggle.setVisible(false);
+        ratioFourToggle.setVisible(false);
+        ratioAllToggle.setVisible(false);
+        
+        inputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        thresholdKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        attackKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        releaseKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        
+        inputKnob.setVisible(true);
+        thresholdKnob.setVisible(true);
+        attackKnob.setVisible(true);
+        releaseKnob.setVisible(true);
+    }
+}
