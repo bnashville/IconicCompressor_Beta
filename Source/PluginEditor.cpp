@@ -156,7 +156,7 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     thresholdKnob.setPipCount(9);
     thresholdKnob.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 25);
     addAndMakeVisible(thresholdKnob);
- 
+    
     thresholdLabel.setText("Threshold", dontSendNotification);
     thresholdLabel.setFont(HackAudio::Fonts::NowRegular);
     thresholdLabel.setColour(juce::Label::textColourId, HackAudio::Colours::White);
@@ -273,7 +273,7 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     flexKnobsCompressor.addComponent(overEasyButton);
     
     flexKnobsCompressor.applyBounds(juce::Rectangle<int>(170,140,(3*largeSliderSize)+(3*smallSliderSize),85));
-
+    
     //Display////////////////////////
     //
     
@@ -332,7 +332,7 @@ void IconicCompressor_betaAudioProcessorEditor::paint (Graphics& g)
     g.drawFittedText ("analog",0, 20, 970, 25, Justification::centred, 1.0);
     
     guiTab(processor.defaultKnobView);
-
+    
 }
 
 void IconicCompressor_betaAudioProcessorEditor::resized()
@@ -437,70 +437,70 @@ void IconicCompressor_betaAudioProcessorEditor::guiTab(int &selectedView){
         
     }
     
-      if (selectedView == 1) {
-          fetCompToggle.setToggleState(false, dontSendNotification);
-          opticalCompToggle.setToggleState(true, dontSendNotification);
-          tubeCompToggle.setToggleState(false, dontSendNotification);
-          vcaCompToggle.setToggleState(false, dontSendNotification);
-          
-          attackKnob.setVisible(false);
-          releaseKnob.setVisible(false);
-          ratioKnob.setVisible(false);
-          
-          mixKnob.setVisible(false);
-          overEasyButton.setVisible(false);
-          
-          inputKnob.setVisible(false);
-          thresholdKnob.setVisible(false);
-          outputKnob.setVisible(false);
-          
-          ratioTwentyToggle.setVisible(false);
-          ratioTwelveToggle.setVisible(false);
-          ratioEightToggle.setVisible(false);
-          ratioFourToggle.setVisible(false);
-          ratioAllToggle.setVisible(false);
-          
-          inputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
-          thresholdKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
-          outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
-          
-          inputKnob.setVisible(true);
-          thresholdKnob.setVisible(true);
-          outputKnob.setVisible(true);
-          
-      }
-     if (selectedView == 2) {
-         fetCompToggle.setToggleState(false, dontSendNotification);
-         opticalCompToggle.setToggleState(false, dontSendNotification);
-         vcaCompToggle.setToggleState(true, dontSendNotification);
-         tubeCompToggle.setToggleState(false, dontSendNotification);
-         
-         
-         inputKnob.setVisible(false);
-         attackKnob.setVisible(false);
-         releaseKnob.setVisible(false);
-         mixKnob.setVisible(false);
-         
-         thresholdKnob.setVisible(false);
-         overEasyButton.setVisible(false);
-         ratioKnob.setVisible(false);
-         outputKnob.setVisible(false);
-         
-         ratioTwentyToggle.setVisible(false);
-         ratioTwelveToggle.setVisible(false);
-         ratioEightToggle.setVisible(false);
-         ratioFourToggle.setVisible(false);
-         ratioAllToggle.setVisible(false);
-         
-         thresholdKnob.setColour(HackAudio::foregroundColourId, juce::Colours::firebrick);
-         ratioKnob.setColour(HackAudio::foregroundColourId, juce::Colours::skyblue);
-         outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::seagreen);
-         
-         thresholdKnob.setVisible(true);
-         overEasyButton.setVisible(true);
-         ratioKnob.setVisible(true);
-         outputKnob.setVisible(true);
-     }
+    if (selectedView == 1) {
+        fetCompToggle.setToggleState(false, dontSendNotification);
+        opticalCompToggle.setToggleState(true, dontSendNotification);
+        tubeCompToggle.setToggleState(false, dontSendNotification);
+        vcaCompToggle.setToggleState(false, dontSendNotification);
+        
+        attackKnob.setVisible(false);
+        releaseKnob.setVisible(false);
+        ratioKnob.setVisible(false);
+        
+        mixKnob.setVisible(false);
+        overEasyButton.setVisible(false);
+        
+        inputKnob.setVisible(false);
+        thresholdKnob.setVisible(false);
+        outputKnob.setVisible(false);
+        
+        ratioTwentyToggle.setVisible(false);
+        ratioTwelveToggle.setVisible(false);
+        ratioEightToggle.setVisible(false);
+        ratioFourToggle.setVisible(false);
+        ratioAllToggle.setVisible(false);
+        
+        inputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        thresholdKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        
+        inputKnob.setVisible(true);
+        thresholdKnob.setVisible(true);
+        outputKnob.setVisible(true);
+        
+    }
+    if (selectedView == 2) {
+        fetCompToggle.setToggleState(false, dontSendNotification);
+        opticalCompToggle.setToggleState(false, dontSendNotification);
+        vcaCompToggle.setToggleState(true, dontSendNotification);
+        tubeCompToggle.setToggleState(false, dontSendNotification);
+        
+        
+        inputKnob.setVisible(false);
+        attackKnob.setVisible(false);
+        releaseKnob.setVisible(false);
+        mixKnob.setVisible(false);
+        
+        thresholdKnob.setVisible(false);
+        overEasyButton.setVisible(false);
+        ratioKnob.setVisible(false);
+        outputKnob.setVisible(false);
+        
+        ratioTwentyToggle.setVisible(false);
+        ratioTwelveToggle.setVisible(false);
+        ratioEightToggle.setVisible(false);
+        ratioFourToggle.setVisible(false);
+        ratioAllToggle.setVisible(false);
+        
+        thresholdKnob.setColour(HackAudio::foregroundColourId, juce::Colours::firebrick);
+        ratioKnob.setColour(HackAudio::foregroundColourId, juce::Colours::skyblue);
+        outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::seagreen);
+        
+        thresholdKnob.setVisible(true);
+        overEasyButton.setVisible(true);
+        ratioKnob.setVisible(true);
+        outputKnob.setVisible(true);
+    }
     if(selectedView == 3){
         fetCompToggle.setToggleState(false, dontSendNotification);
         opticalCompToggle.setToggleState(false, dontSendNotification);
@@ -534,3 +534,4 @@ void IconicCompressor_betaAudioProcessorEditor::guiTab(int &selectedView){
         releaseKnob.setVisible(true);
     }
 }
+
