@@ -8,11 +8,11 @@
     <key>CFBundleIconFile</key>
     <string></string>
     <key>CFBundleIdentifier</key>
-    <string>com.yourcompany.IconicCompressor_Beta</string>
+    <string>com.HackAudio.IconicCompressor_Analog</string>
     <key>CFBundleName</key>
-    <string>IconicCompressor_Beta</string>
+    <string>IconicCompressor_Analog</string>
     <key>CFBundleDisplayName</key>
-    <string>IconicCompressor_Beta</string>
+    <string>IconicCompressor_Analog</string>
     <key>CFBundlePackageType</key>
     <string>BNDL</string>
     <key>CFBundleSignature</key>

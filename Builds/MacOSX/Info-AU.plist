@@ -8,11 +8,11 @@
     <key>CFBundleIconFile</key>
     <string></string>
     <key>CFBundleIdentifier</key>
-    <string>com.yourcompany.IconicCompressor_Beta</string>
+    <string>com.HackAudio.IconicCompressor_Analog</string>
     <key>CFBundleName</key>
-    <string>IconicCompressor_Beta</string>
+    <string>IconicCompressor_Analog</string>
     <key>CFBundleDisplayName</key>
-    <string>IconicCompressor_Beta</string>
+    <string>IconicCompressor_Analog</string>
     <key>CFBundlePackageType</key>
     <string>BNDL</string>
     <key>CFBundleSignature</key>
@@ -29,11 +29,11 @@
     <array>
       <dict>
         <key>name</key>
-        <string>yourcompany: IconicCompressor_Beta</string>
+        <string>1986: IconicCompressor_Analog</string>
         <key>description</key>
-        <string>IconicCompressor_Beta</string>
+        <string>IconicCompressor_Analog</string>
         <key>factoryFunction</key>
-        <string>IconicCompressor_BetaAUFactory</string>
+        <string>IconicCompressor_AnalogAUFactory</string>
         <key>manufacturer</key>
         <string>Manu</string>
         <key>type</key>
@@ -42,6 +42,13 @@
         <string>H4pf</string>
         <key>version</key>
         <integer>65536</integer>
+        <key>resourceUsage</key>
+        <dict>
+          <key>network.client</key>
+          <true/>
+          <key>temporary-exception.files.all.read-write</key>
+          <true/>
+        </dict>
       </dict>
     </array>
   </dict>

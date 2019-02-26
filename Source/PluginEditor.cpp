@@ -1,55 +1,124 @@
 /*
-  ==============================================================================
-
-    This file was auto-geneinputd!
-
-    It contains the basic framework code for a JUCE plugin editor.
-
-  ==============================================================================
-*/
+ ==============================================================================
+ 
+ This file was auto-geneinputd!
+ 
+ It contains the basic framework code for a JUCE plugin editor.
+ 
+ ==============================================================================
+ */
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
 
 //==============================================================================
-IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEditor (IconicCompressor_betaAudioProcessor& p)
-    : AudioProcessorEditor (&p), processor (p)
+IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEditor (IconicCompressor_betaAudioProcessor& p, AudioProcessorValueTreeState& vts)
+: AudioProcessorEditor (&p), processor (p), valueTreeState (vts)
 {
-
+    
     // order: smoothing before static charastics, or v/v
     // smoothing method: peak, rms approximation, rms exact, 2nd order smoothing function (biquad), feed forward (straight), feed-back (straight), mixed (ff & fb)
     
-
+    
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     //Settings for the input
-    compressorKnobsButton.addListener(this);
-    compressorKnobsButton.setButtonText("Compressor");
-    compressorKnobsButton.setConnectedEdges(Button::ConnectedOnRight);
-    compressorKnobsButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    compressorKnobsButton.setSize(100,30);
-    compressorKnobsButton.setRadioGroupId(4);
-    compressorKnobsButton.setToggleState(true, dontSendNotification);
-    addAndMakeVisible(compressorKnobsButton);
+    fetCompToggle.addListener(this);
+    fetCompToggle.setButtonText("FET");
+    fetCompToggle.setConnectedEdges(Button::ConnectedOnRight);
+    fetCompToggle.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    fetCompToggle.setSize(100,30);
+    fetCompToggle.setRadioGroupId(4);
+    fetCompToggle.setToggleState(true, dontSendNotification);
+    addAndMakeVisible(fetCompToggle);
     
-    sidechainKnobsButton.addListener(this);
-    sidechainKnobsButton.setButtonText("Sidechain");
-    sidechainKnobsButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    sidechainKnobsButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    sidechainKnobsButton.setSize(90,30);
-    sidechainKnobsButton.setRadioGroupId(4);
-    addAndMakeVisible(sidechainKnobsButton);
+    opticalCompToggle.addListener(this);
+    opticalCompToggle.setButtonText("Optical");
+    opticalCompToggle.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    opticalCompToggle.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    opticalCompToggle.setSize(120,30);
+    opticalCompToggle.setRadioGroupId(4);
+    addAndMakeVisible(opticalCompToggle);
     
-    multibandKnobsButton.addListener(this);
-    multibandKnobsButton.setButtonText("Multiband");
-    multibandKnobsButton.setConnectedEdges(Button::ConnectedOnLeft);
-    multibandKnobsButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    multibandKnobsButton.setSize(90,30);
-    multibandKnobsButton.setRadioGroupId(4);
-    addAndMakeVisible(multibandKnobsButton);
-
-
+    tubeCompToggle.addListener(this);
+    tubeCompToggle.setButtonText("Tube");
+    tubeCompToggle.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    tubeCompToggle.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    tubeCompToggle.setSize(90,30);
+    tubeCompToggle.setRadioGroupId(4);
+    addAndMakeVisible(tubeCompToggle);
+    
+    vcaCompToggle.addListener(this);
+    vcaCompToggle.setButtonText("VCA");
+    vcaCompToggle.setConnectedEdges(Button::ConnectedOnLeft);
+    vcaCompToggle.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    vcaCompToggle.setSize(90,30);
+    vcaCompToggle.setRadioGroupId(4);
+    addAndMakeVisible(vcaCompToggle);
+    
+    // -------------'76 RATIO TOGGLE'---------------------------------------
+    
+    ratioFourToggle.addListener(this);
+    ratioFourToggle.setButtonText("4");
+    ratioFourToggle.setConnectedEdges(Button::ConnectedOnRight);
+    ratioFourToggle.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    ratioFourToggle.setSize(ratioKnobWidth,ratioKnobHeight);
+    ratioFourToggle.setRadioGroupId(1);
+    ratioFourToggle.setToggleState(true, dontSendNotification);
+    addAndMakeVisible(ratioFourToggle);
+    
+    ratioEightToggle.addListener(this);
+    ratioEightToggle.setButtonText("8");
+    ratioEightToggle.setConnectedEdges(Button::ConnectedOnRight | Button::ConnectedOnLeft);
+    ratioEightToggle.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    ratioEightToggle.setSize(ratioKnobWidth,ratioKnobHeight);
+    ratioEightToggle.setRadioGroupId(1);
+    ratioEightToggle.setToggleState(false, dontSendNotification);
+    addAndMakeVisible(ratioEightToggle);
+    
+    ratioTwelveToggle.addListener(this);
+    ratioTwelveToggle.setButtonText("12");
+    ratioTwelveToggle.setConnectedEdges(Button::ConnectedOnRight | Button::ConnectedOnLeft);
+    ratioTwelveToggle.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    ratioTwelveToggle.setSize(ratioKnobWidth,ratioKnobHeight);
+    ratioTwelveToggle.setRadioGroupId(1);
+    ratioTwelveToggle.setToggleState(false, dontSendNotification);
+    addAndMakeVisible(ratioTwelveToggle);
+    
+    ratioTwentyToggle.addListener(this);
+    ratioTwentyToggle.setButtonText("20");
+    ratioTwentyToggle.setConnectedEdges(Button::ConnectedOnRight | Button::ConnectedOnLeft);
+    ratioTwentyToggle.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    ratioTwentyToggle.setSize(ratioKnobWidth,ratioKnobHeight);
+    ratioTwentyToggle.setRadioGroupId(1);
+    ratioTwentyToggle.setToggleState(false, dontSendNotification);
+    addAndMakeVisible(ratioTwentyToggle);
+    
+    ratioAllToggle.addListener(this);
+    ratioAllToggle.setButtonText("All");
+    ratioAllToggle.setConnectedEdges(Button::ConnectedOnLeft);
+    ratioAllToggle.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
+    ratioAllToggle.setSize(ratioKnobWidth,ratioKnobHeight);
+    ratioAllToggle.setRadioGroupId(1);
+    ratioAllToggle.setToggleState(false, dontSendNotification);
+    addAndMakeVisible(ratioAllToggle);
+    
+    // ---------------------------------------------------------------------
+    overEasyButton.addListener(this);
+    overEasyButton.setButtonText("overeasy");
+    //overEasyButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    overEasyButton.setButtonStyle(HackAudio::Button::ButtonStyle::SlidingToggle);
+    overEasyButton.setSize(90,30);
+    addAndMakeVisible(overEasyButton);
+    
+    overEasyButtonLabel.setText("overeasy", dontSendNotification);
+    overEasyButtonLabel.setFont(HackAudio::Fonts::NowRegular);
+    overEasyButtonLabel.setColour(juce::Label::textColourId, HackAudio::Colours::White);
+    overEasyButtonLabel.setJustificationType(Justification::centred);
+    overEasyButtonLabel.attachToComponent(&overEasyButton, false); // 'false' is to put it on top
+    addAndMakeVisible(overEasyButtonLabel);
+    
     //------------------KNOB SETTINGS -----------------
     inputKnob.setSliderStyle(Slider::RotaryHorizontalVerticalDrag);
     inputKnob.addListener(this);
@@ -87,8 +156,7 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     thresholdKnob.setPipCount(9);
     thresholdKnob.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 25);
     addAndMakeVisible(thresholdKnob);
-    
-    
+ 
     thresholdLabel.setText("Threshold", dontSendNotification);
     thresholdLabel.setFont(HackAudio::Fonts::NowRegular);
     thresholdLabel.setColour(juce::Label::textColourId, HackAudio::Colours::White);
@@ -112,22 +180,6 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     attackLabel.setJustificationType(Justification::centred);
     attackLabel.attachToComponent(&attackKnob, false); // 'false' is to put it on top
     addAndMakeVisible(attackLabel);
-    
-    //Settings for the crossoverKnob
-    crossoverKnob.setSliderStyle(Slider::RotaryHorizontalVerticalDrag);
-    crossoverKnob.addListener(this);
-    crossoverKnob.setSize(smallSliderSize,smallSliderSize);
-    crossoverKnob.setPipCount(9);
-    crossoverKnob.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 25);
-    addAndMakeVisible(crossoverKnob);
-    
-    crossoverLabel.setText("Crossover", dontSendNotification);
-    crossoverLabel.setFont(HackAudio::Fonts::NowRegular);
-    crossoverLabel.setColour(juce::Label::textColourId, HackAudio::Colours::White);
-    crossoverLabel.setJustificationType(Justification::centred);
-    crossoverLabel.attachToComponent(&crossoverKnob, false); // 'false' is to put it on top
-    addAndMakeVisible(crossoverLabel);
-    
     
     //Settings for the release switch
     releaseKnob.setSliderStyle(Slider::RotaryHorizontalVerticalDrag);
@@ -160,35 +212,6 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     outputLabel.attachToComponent(&outputKnob, false); // 'false' is to put it on top
     addAndMakeVisible(outputLabel);
     
-    
-    lowCutKnob.setSliderStyle(Slider::RotaryHorizontalVerticalDrag);
-    lowCutKnob.addListener(this);
-    lowCutKnob.setSize(smallSliderSize,smallSliderSize);
-    lowCutKnob.setPipCount(12);
-    lowCutKnob.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 25);
-    addAndMakeVisible(lowCutKnob);
-    
-    lowCutLabel.setText("Low Cut", dontSendNotification);
-    lowCutLabel.setFont(HackAudio::Fonts::NowRegular);
-    lowCutLabel.setColour(juce::Label::textColourId, HackAudio::Colours::White);
-    lowCutLabel.setJustificationType(Justification::centred);
-    lowCutLabel.attachToComponent(&lowCutKnob, false); // 'false' is to put it on top
-    addAndMakeVisible(lowCutLabel);
-    
-    highCutKnob.setSliderStyle(Slider::RotaryHorizontalVerticalDrag);
-    highCutKnob.addListener(this);
-    highCutKnob.setSize(smallSliderSize,smallSliderSize);
-    highCutKnob.setPipCount(12);
-    highCutKnob.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 25);
-    addAndMakeVisible(highCutKnob);
-    
-    highCutLabel.setText("High Cut", dontSendNotification);
-    highCutLabel.setFont(HackAudio::Fonts::NowRegular);
-    highCutLabel.setColour(juce::Label::textColourId, HackAudio::Colours::White);
-    highCutLabel.setJustificationType(Justification::centred);
-    highCutLabel.attachToComponent(&highCutKnob, false); // 'false' is to put it on top
-    addAndMakeVisible(highCutLabel);
-    
     mixKnob.setSliderStyle(Slider::RotaryHorizontalVerticalDrag);
     mixKnob.addListener(this);
     mixKnob.setSize(largeSliderSize,largeSliderSize);
@@ -202,429 +225,84 @@ IconicCompressor_betaAudioProcessorEditor::IconicCompressor_betaAudioProcessorEd
     mixLabel.setJustificationType(Justification::centred);
     mixLabel.attachToComponent(&mixKnob, false); // 'false' is to put it on top
     addAndMakeVisible(mixLabel);
-  
     
-   
-     // ------------------------TOGGLE BUTTONS, ROW 1, DIGITAL TYPE -----------------
+    //--------------METER----------------
+    grMeter.setMeterStyle(HackAudio::Meter::MeterStyle::Horizontal);
+    grMeter.setMeterCalibration(HackAudio::Meter::MeterCalibration::VU);
+    grMeter.setPeakStatus(false);
+    grMeter.setSize(200, 30);
+    grMeter.setColour(HackAudio::highlightColourId, juce::Colours::black);
+    grMeter.setColour(HackAudio::backgroundColourId, juce::Colours::orange);
+    grMeter.setPipState(false);
+    grMeter.setSource(1, &processor.gainChange_meter);
+    addAndMakeVisible(grMeter);
     
-    // Various settings for the perceptual wave button
-    peakScButton.addListener(this);
-    peakScButton.setButtonText("Peak");
-    peakScButton.setConnectedEdges(Button::ConnectedOnRight);
-    peakScButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    peakScButton.setSize(70,40);
-    peakScButton.setRadioGroupId(5);
-    addAndMakeVisible(peakScButton);
-    
-    rmsScButton.addListener(this);
-    rmsScButton.setButtonText("RMS");
-    rmsScButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    rmsScButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    rmsScButton.setSize(70,40);
-    rmsScButton.setRadioGroupId(5);
-    addAndMakeVisible(rmsScButton);
-    
-    levelCorrectedButton.addListener(this);
-    levelCorrectedButton.setButtonText("Level-Corrected");
-    levelCorrectedButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    levelCorrectedButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    levelCorrectedButton.setSize(120,40);
-    levelCorrectedButton.setRadioGroupId(5);
-    addAndMakeVisible(levelCorrectedButton);
-    
-    smoothButton.addListener(this);
-    smoothButton.setButtonText("Smooth");
-    smoothButton.setConnectedEdges(Button::ConnectedOnLeft);
-    smoothButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    smoothButton.setSize(90,40);
-    smoothButton.setRadioGroupId(5);
-    smoothButton.setToggleState(true, dontSendNotification);
-    addAndMakeVisible(smoothButton);
-
-    
-    // --------------FF/ FB -----------------
-     feedForwardButton.addListener(this);
-    feedForwardButton.setButtonText("Feed-Forward");
-    feedForwardButton.setConnectedEdges(Button::ConnectedOnRight);
-    feedForwardButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    feedForwardButton.setSize(110,30);
-    feedForwardButton.setRadioGroupId(6);
-    feedForwardButton.setToggleState(true, dontSendNotification);
-    addAndMakeVisible(feedForwardButton);
-    
-    feedBackScButton.addListener(this);
-    feedBackScButton.setButtonText("Feed-Back");
-    feedBackScButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    feedBackScButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    feedBackScButton.setSize(90,30);
-    feedBackScButton.setRadioGroupId(6);
-    addAndMakeVisible(feedBackScButton);
-    
-    hybridButton.addListener(this);
-    hybridButton.setButtonText("Hybrid");
-    hybridButton.setConnectedEdges(Button::ConnectedOnLeft);
-    hybridButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    hybridButton.setSize(90,30);
-    hybridButton.setRadioGroupId(6);
-    addAndMakeVisible(hybridButton);
-    
-    //----------PLACEMENT ------------------
-    logOrderButton.addListener(this);
-    logOrderButton.setButtonText("Log-Domain");
-    logOrderButton.setConnectedEdges(Button::ConnectedOnRight);
-    logOrderButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    logOrderButton.setSize(100,30);
-    logOrderButton.setRadioGroupId(7);
-    logOrderButton.setToggleState(true, dontSendNotification);
-    addAndMakeVisible(logOrderButton);
-    
-    rttOrderButton.addListener(this);
-    rttOrderButton.setButtonText("Return to Thres");
-    rttOrderButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    rttOrderButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    rttOrderButton.setSize(140,30);
-    rttOrderButton.setRadioGroupId(7);
-    addAndMakeVisible(rttOrderButton);
-    
-    rtzOrderButton.addListener(this);
-    rtzOrderButton.setButtonText("Return to Zero");
-    rtzOrderButton.setConnectedEdges(Button::ConnectedOnLeft);
-    rtzOrderButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    rtzOrderButton.setSize(140,30);
-    rtzOrderButton.setRadioGroupId(7);
-    addAndMakeVisible(rtzOrderButton);
-
-
-    
-    // ------------------------TOGGLE BUTTONS, ROW 2, COMPRESSION TYPE   -----------------
-    
-    
-    // Various settings for the multi-band buttons
-    normalTremButton.addListener(this);
-    normalTremButton.setButtonText("Normal");
-    normalTremButton.setConnectedEdges(Button::ConnectedOnRight);
-    normalTremButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    normalTremButton.setSize(80,30);
-    normalTremButton.setRadioGroupId(3);
-    normalTremButton.setToggleState(true, dontSendNotification);
-    addAndMakeVisible(normalTremButton);
-    
-    // Various settings for the normal tremolo treble only button
-    trebleTremButton.addListener(this);
-    trebleTremButton.setButtonText("Treble Only");
-    trebleTremButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    trebleTremButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    trebleTremButton.setSize(100,30);
-    trebleTremButton.setRadioGroupId(3);
-    addAndMakeVisible(trebleTremButton);
-    
-    // Various settings for the normal tremolo bass only button
-    bassTremButton.addListener(this);
-    bassTremButton.setButtonText("Bass Only");
-    bassTremButton.setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnLeft);
-    bassTremButton.setButtonStyle(HackAudio::Button::ButtonStyle::BarToggle);
-    bassTremButton.setSize(90,30);
-    bassTremButton.setRadioGroupId(3);
-    addAndMakeVisible(bassTremButton);
-
+    flexMeter.addComponent(grMeter);
+    flexMeter.applyBounds(juce::Rectangle<int>(300,310,210,30));
     
     //-------------------FLEX BOX ITEMS ----------------
     //Flex box for input source button
-    flexButtons.addComponent(compressorKnobsButton);
-    flexButtons.addComponent(sidechainKnobsButton);
-    flexButtons.addComponent(multibandKnobsButton);
+    flexButtons.addComponent(fetCompToggle);
+    flexButtons.addComponent(opticalCompToggle);
+    flexButtons.addComponent(tubeCompToggle);
+    flexButtons.addComponent(vcaCompToggle);
     
     //flexButtons.setJustifyContent(juce::FlexBox::JustifyContent::center);
     flexButtons.applyBounds(juce::Rectangle<int>(280,60,260,40));
-   
-    // Flex Box for tremolo type Buttons
-    flexTremType.addComponent(normalTremButton);
-    flexTremType.addComponent(trebleTremButton);
-    flexTremType.addComponent(bassTremButton);
-
-    //flexTremType.setJustifyContent(juce::FlexBox::JustifyContent::center);
-    flexTremType.applyBounds(juce::Rectangle<int>(150,160,270,40));
+    
+    
+    // Flex box for ratio toggle
+    
+    flexRatioToggle.addComponent(ratioFourToggle);
+    flexRatioToggle.addComponent(ratioEightToggle);
+    flexRatioToggle.addComponent(ratioTwelveToggle);
+    flexRatioToggle.addComponent(ratioTwentyToggle);
+    flexRatioToggle.addComponent(ratioAllToggle);
+    flexRatioToggle.applyBounds(juce::Rectangle<int>(300,260,ratioKnobWidth*5,ratioKnobHeight));
     
     //Flex box for knobs
     flexKnobsCompressor.addComponent(inputKnob);
-    flexKnobsCompressor.addComponent(thresholdKnob);
+    flexKnobsCompressor.addComponent(outputKnob);
     flexKnobsCompressor.addComponent(attackKnob);
     flexKnobsCompressor.addComponent(releaseKnob);
     flexKnobsCompressor.addComponent(ratioKnob);
-    flexKnobsCompressor.addComponent(outputKnob);
+    
+    flexKnobsCompressor.addComponent(thresholdKnob);
     flexKnobsCompressor.addComponent(mixKnob);
+    
+    flexKnobsCompressor.addComponent(overEasyButton);
+    
+    flexKnobsCompressor.applyBounds(juce::Rectangle<int>(170,140,(3*largeSliderSize)+(3*smallSliderSize),85));
 
-    flexKnobsCompressor.applyBounds(juce::Rectangle<int>(50,140,(4*largeSliderSize)+(3*smallSliderSize)+knobSpacing,85));
-    
-    // Flex box for sidechain knobs
-    flexKnobsSidechain.addComponent(lowCutKnob);
-    flexKnobsSidechain.addComponent(highCutKnob);
-  
-    flexKnobsSidechain.applyBounds(juce::Rectangle<int>(150,140,(2*smallSliderSize)+50,85));
-   
-    // Flex Box for analog Buttons
-    flexLevelDetector.addComponent(peakScButton);
-    flexLevelDetector.addComponent(rmsScButton);
-    flexLevelDetector.addComponent(levelCorrectedButton);
-    flexLevelDetector.addComponent(smoothButton);
-    flexLevelDetector.applyBounds(juce::Rectangle<int>(350,160,350,40));
-
-    flexSystemDesign.addComponent(feedForwardButton);
-    flexSystemDesign.addComponent(feedBackScButton);
-    flexSystemDesign.addComponent(hybridButton);
-    flexSystemDesign.applyBounds(juce::Rectangle<int>(475,250,290,40));
-    
-    // flex order
-    flexOrder.addComponent(logOrderButton);
-    flexOrder.addComponent(rttOrderButton);
-    flexOrder.addComponent(rtzOrderButton);
-    flexOrder.applyBounds(juce::Rectangle<int>(50,250,380,40));
-    
-    flexMultiband.addComponent(crossoverKnob);
-    flexMultiband.applyBounds(juce::Rectangle<int>(350,160,140*2,40));
-    
-    
-    
-    //////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////
-    //////// Viewport Overview Diagram Display////////////////////////
-    
-    //bitBlock.setText("Bit", dontSendNotification);
-    bitBlock.setPlaceholder("Bit");
-    bitBlock.setBounds(0,0,64,60);
-    predelayBlock.setPlaceholder("Pre-Delay");
-    predelayBlock.setBounds(92,0,88,60);
-    reverbBlock.setPlaceholder("Reverb");
-    reverbBlock.setBounds(210,-10,110,80);
-    hpfBlock.setPlaceholder("HPF");
-    hpfBlock.setBounds(350,0,64,60);
-    lpfBlock.setPlaceholder("LPF");
-    lpfBlock.setBounds(440,0,64,60);
-    wetBlock.setPlaceholder("Wet");
-    wetBlock.setBounds(530,0,70,60);
-    wetBlock.setPostfix("%",dontSendNotification);
-    dryBlock.setPlaceholder("Dry");
-    dryBlock.setBounds(350,128,70,60);
-    dryBlock.setPostfix("%",dontSendNotification);
-    sumJunction.setSymbol(HackAudio::Diagram::Junction::Symbol::Add);
-    sumJunction.setBounds(620,10,40,40);
-    gainBlock.setPlaceholder("Gain");
-    gainBlock.setBounds(685,0,76,60);
-    gainBlock.setPostfix("dB",dontSendNotification);
-    
-    // Connect
-    overviewDiagram.addDiagramInput(bitBlock);
-    overviewDiagram.addDiagramInput(dryBlock);
-    overviewDiagram.connect(bitBlock,predelayBlock);
-    overviewDiagram.connect(predelayBlock,reverbBlock);
-    overviewDiagram.connect(reverbBlock,hpfBlock);
-    overviewDiagram.connect(hpfBlock,lpfBlock);
-    overviewDiagram.connect(lpfBlock,wetBlock);
-    overviewDiagram.connect(wetBlock,sumJunction);
-    overviewDiagram.connect(dryBlock,sumJunction);
-    overviewDiagram.connect(sumJunction,gainBlock);
-    overviewDiagram.addDiagramOutput(gainBlock);
-    
-    overviewDiagram.setName("Overview"); // Optional
-    
-    //overviewDiagram.setFont(HackAudio::Fonts::NowRegular.withHeight(HackAudio::FontHeights::Medium));
-    
-    ////// Sub-diagrams of the Overview Diagram ////////////////////
-    // First Arg - Clicked Block, Second Arg - diagram name
-    overviewDiagram.setSubDiagram(gainBlock,gainDiagram);
-    overviewDiagram.setSubDiagram(predelayBlock,predelayDiagram);
-    overviewDiagram.setSubDiagram(hpfBlock,hpfDiagram);
-    overviewDiagram.setSubDiagram(lpfBlock,lpfDiagram);
-    
-    // Set the correct sub-diagram on intialization
-    
-    if (processor.algorithm == 0){
-        // Schroeder
-        
-        overviewDiagram.setSubDiagram(reverbBlock,schDiagram);
-        
-        if (processor.typeModifier == 0){
-            schDiagram.comb_1_label.setVisible(false);
-            schDiagram.comb_2_label.setVisible(false);
-            schDiagram.comb_7_label.setVisible(false);
-            schDiagram.comb_8_label.setVisible(false);
-        }
-        if (processor.typeModifier == 1){
-            schDiagram.comb_1_label.setVisible(false);
-            schDiagram.comb_2_label.setVisible(true);
-            schDiagram.comb_7_label.setVisible(true);
-            schDiagram.comb_8_label.setVisible(false);
-        }
-        if (processor.typeModifier == 2){
-            schDiagram.comb_1_label.setVisible(true);
-            schDiagram.comb_2_label.setVisible(true);
-            schDiagram.comb_7_label.setVisible(true);
-            schDiagram.comb_8_label.setVisible(true);
-        }
-        
-    }
-    if (processor.algorithm == 1){
-        // Moorer
-        overviewDiagram.setSubDiagram(reverbBlock,morDiagram);
-    }
-    if (processor.algorithm == 2){
-        // FDN
-        overviewDiagram.setSubDiagram(reverbBlock,fdnDiagram);
-        fdnDiagram.fbGain_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
-        
-        if (processor.typeModifier == 0) {
-            fdnDiagram.matrix_label.setText("\\array 0 & 1 & 1 & 0 &// -1 & 0 & 0 & -1 &// 1 & 0 & 0 & -1 &// 0 & 1 & -1 & 0 \\end",sendNotification);
-            //fdnDiagram.fbGain_label.setText(String(0.25f*timeObject.getValue()+0.4f,2),sendNotification);
-            
-        }
-        if (processor.typeModifier == 1) {
-            fdnDiagram.matrix_label.setText("\\array 1 & 1 & 1 & 1 &// 1 & -1 & 1 & -1 &// 1 & 1 & -1 & -1 &// 1 & -1 & -1 & 1 \\end",sendNotification);
-            //fdnDiagram.fbGain_label.setText(String(0.15f*timeObject.getValue()+0.28f,2),sendNotification);
-        }
-        if (processor.typeModifier == 2) {
-            fdnDiagram.matrix_label.setText("\\array 1 & -1 & -1 & -1 &// -1 & 1 & -1 & -1 &// -1 & -1 & 1 & -1 &// -1 & -1 & -1 & 1 \\end",sendNotification);
-            //fdnDiagram.fbGain_label.setText(String(0.181f*timeObject.getValue()+0.29f,2),sendNotification);
-        }
-        
-    }
-    if (processor.algorithm == 3){
-        // Dattorro
-        overviewDiagram.setSubDiagram(reverbBlock,datDiagram);
-        
-        
-        if (processor.typeModifier == 0){
-            datDiagram.fbd_1_diag.fb_gain.setText("0.0",sendNotification);
-            datDiagram.fbd_1_diag.ff_gain.setText("1.0",sendNotification);
-            datDiagram.fbd_2_diag.fb_gain.setText("0.0",sendNotification);
-            datDiagram.fbd_2_diag.ff_gain.setText("1.0",sendNotification);
-            datDiagram.fbd_3_diag.fb_gain.setText("0.0",sendNotification);
-            datDiagram.fbd_3_diag.ff_gain.setText("1.0",sendNotification);
-        }
-        if (processor.typeModifier == 1){
-            datDiagram.fbd_1_diag.fb_gain.setText("0.05",sendNotification);
-            datDiagram.fbd_1_diag.ff_gain.setText("0.95",sendNotification);
-            datDiagram.fbd_2_diag.fb_gain.setText("0.05",sendNotification);
-            datDiagram.fbd_2_diag.ff_gain.setText("0.95",sendNotification);
-            datDiagram.fbd_3_diag.fb_gain.setText("0.05",sendNotification);
-            datDiagram.fbd_3_diag.ff_gain.setText("0.95",sendNotification);
-        }
-        if (processor.typeModifier == 2){
-            datDiagram.fbd_1_diag.fb_gain.setText("0.5",sendNotification);
-            datDiagram.fbd_1_diag.ff_gain.setText("0.5",sendNotification);
-            datDiagram.fbd_2_diag.fb_gain.setText("0.5",sendNotification);
-            datDiagram.fbd_2_diag.ff_gain.setText("0.5",sendNotification);
-            datDiagram.fbd_3_diag.fb_gain.setText("0.5",sendNotification);
-            datDiagram.fbd_3_diag.ff_gain.setText("0.5",sendNotification);
-        }
-    }
-    if (processor.algorithm == 4){
-        // Gardner
-        if (processor.typeModifier == 0){
-            overviewDiagram.setSubDiagram(reverbBlock,garSDiagram);
-        }
-        if (processor.typeModifier == 1){
-            overviewDiagram.setSubDiagram(reverbBlock,garMDiagram);
-            garMDiagram.napf_1_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
-        }
-        if (processor.typeModifier == 2){
-            overviewDiagram.setSubDiagram(reverbBlock,garLDiagram);
-            garLDiagram.napf_2_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////
-    // Over-writing the default name within the Bi-Quad Script
-    lpfDiagram.setName("Bi-Quad Low-Pass Filter");
-    hpfDiagram.setName("Bi-Quad High-Pass Filter");
-
-    // Moorer Text
-    morDiagram.comb_2_diag.fb_gain2.setText("0.01",sendNotification);
-    morDiagram.comb_3_diag.fb_gain2.setText("0.01",sendNotification);
-    morDiagram.comb_4_diag.fb_gain2.setText("0.01",sendNotification);
-    morDiagram.comb_5_diag.fb_gain2.setText("0.01",sendNotification);
-    morDiagram.comb_6_diag.fb_gain2.setText("0.01",sendNotification);
-    morDiagram.comb_7_diag.fb_gain2.setText("0.01",sendNotification);
-    
-    // Dattorro Text
-    
-
-  
-    garSDiagram.gain_1_label.setText("0.5",sendNotification);
-    garSDiagram.gain_2_label.setText("0.5",sendNotification);
-    garSDiagram.lpf_label.setText("4200",sendNotification);
-    garSDiagram.gain_1_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
-    garSDiagram.gain_2_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
-    
-    // Sub-diagram LPF
-    garSDiagram.lpf_diag.main_dry.setText(".053",sendNotification);
-    garSDiagram.lpf_diag.ff_1_gain.setText(".107",sendNotification);
-    garSDiagram.lpf_diag.ff_2_gain.setText(".053",sendNotification);
-    garSDiagram.lpf_diag.fb_1_gain.setText("1.24",sendNotification);
-    garSDiagram.lpf_diag.fb_2_gain.setText("-.46",sendNotification);
-    
-    garSDiagram.lpf_diag.setName("Low-Pass Filter, 4.2 kHz");
-    
-   
-    garMDiagram.gain_0_label.setText("0.5",sendNotification);
-    garMDiagram.gain_1_label.setText("0.5",sendNotification);
-    garMDiagram.gain_2_label.setText("0.5",sendNotification);
-    garMDiagram.lpf_label.setText("2500",sendNotification);
-    garMDiagram.gain_0_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
-    garMDiagram.gain_1_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
-    garMDiagram.gain_2_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
-    garMDiagram.napf_1_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
-    
-    // Sub-diagram LPF
-    garMDiagram.lpf_diag.main_dry.setText(".022",sendNotification);
-    garMDiagram.lpf_diag.ff_1_gain.setText(".043",sendNotification);
-    garMDiagram.lpf_diag.ff_2_gain.setText(".022",sendNotification);
-    garMDiagram.lpf_diag.fb_1_gain.setText("1.54",sendNotification);
-    garMDiagram.lpf_diag.fb_2_gain.setText("-.629",sendNotification);
-    
-    garMDiagram.lpf_diag.setName("Low-Pass Filter, 2.5 kHz");
-    
-   
-    garLDiagram.gain_0_label.setText("0.34",sendNotification);
-    garLDiagram.gain_1_label.setText("0.14",sendNotification);
-    garLDiagram.gain_2_label.setText("0.14",sendNotification);
-    garLDiagram.lpf_label.setText("2600",sendNotification);
-    garLDiagram.gain_0_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
-    garLDiagram.gain_1_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
-    garLDiagram.gain_2_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
-    garLDiagram.napf_2_label.setFont(HackAudio::Fonts::NowRegular.withHeight(13));
-    
-    // Sub-diagram LPF
-    garLDiagram.lpf_diag.main_dry.setText(".023",sendNotification);
-    garLDiagram.lpf_diag.ff_1_gain.setText(".046",sendNotification);
-    garLDiagram.lpf_diag.ff_2_gain.setText(".023",sendNotification);
-    garLDiagram.lpf_diag.fb_1_gain.setText("1.52",sendNotification);
-    garLDiagram.lpf_diag.fb_2_gain.setText("-.618",sendNotification);
-    
-    garLDiagram.lpf_diag.setName("Low-Pass Filter, 2.6 kHz");
-    
-   
+    //Display////////////////////////
     //
-    ////////////////////////////////////////////////////////////////
-    port.setBounds(10,310,guiWidth-20,(guiHeight/2)-30); //310
-    port.setDiagram(overviewDiagram);
-    addAndMakeVisible(port);
     
+    //    startTimer(50);
+    //
+    //    port.setBounds(0,250,guiWidth,350);
+    //
+    //    port.setDiagram(biquadDiagram);
+    //
+    //    addAndMakeVisible(port);
     
-    
-
     //---------------------------- ATTACHMENTS --------------------------------
-    thresholdAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"threshold", thresholdKnob);
-    crossoverAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"crossover", crossoverKnob);
-    ratioAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"ratio", ratioKnob);
-    outputAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"output", outputKnob);
-    inputAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"input", inputKnob);
-    mixAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"mix", mixKnob);
- 
-    releaseAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"release", releaseKnob);
-    attackAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"attack", attackKnob);
-    lowCutAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"lowCut", lowCutKnob);
-    highCutAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"highCut", highCutKnob);
-    mixAttachment = new AudioProcessorValueTreeState::SliderAttachment(p.getState(),"mix", mixKnob);
+    
+    thresholdAttachment = std::make_unique<SliderAttachment>(processor.treeState,"threshold", thresholdKnob);
+    
+    ratioAttachment = std::make_unique<SliderAttachment>(processor.treeState,"ratio", ratioKnob);
+    
+    outputAttachment = std::make_unique<SliderAttachment>(processor.treeState,"output", outputKnob);
+    inputAttachment = std::make_unique<SliderAttachment>(processor.treeState,"input", inputKnob);
+    
+    mixAttachment = std::make_unique<SliderAttachment>(processor.treeState,"mix", mixKnob);
+    releaseAttachment = std::make_unique<SliderAttachment>(processor.treeState,"release", releaseKnob);
+    attackAttachment = std::make_unique<SliderAttachment>(processor.treeState,"attack", attackKnob);
+    
+    //updateFilterButtonSelected();
+    
+    
+    //---------------------------- ATTACHMENTS --------------------------------
+    
     
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -641,7 +319,7 @@ void IconicCompressor_betaAudioProcessorEditor::paint (Graphics& g)
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
     // htmlcolorcodes.com/color-names/
-    g.setColour (Colours::rebeccapurple); //firebrick
+    g.setColour (Colours::firebrick); //rebeccapurple
     g.setFont (15.0f);
     
     Font titleFont = HackAudio::Fonts::NowBold;
@@ -650,40 +328,37 @@ void IconicCompressor_betaAudioProcessorEditor::paint (Graphics& g)
     g.setFont(titleFont);
     //g.setColour (juce::Colours::blue);
     g.drawFittedText ("iconic",0, 20, 740, 25, Justification::centred, 1.0);
-    g.setColour (juce::Colours::mediumseagreen);//g.setColour (Colours::cyan);
-    g.drawFittedText ("compressor",0, 20, 970, 25, Justification::centred, 1.0);
+    g.setColour (juce::Colours::orange);//g.setColour (Colours::cyan);
+    g.drawFittedText ("analog",0, 20, 970, 25, Justification::centred, 1.0);
     
     if (processor.defaultKnobView == 0) {
+        inputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
+        ratioKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        attackKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
+        releaseKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
+        outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
         
         inputKnob.setVisible(true);
-        thresholdKnob.setVisible(true);
+        outputKnob.setVisible(true);
+        
         attackKnob.setVisible(true);
         releaseKnob.setVisible(true);
-        ratioKnob.setVisible(true);
-        outputKnob.setVisible(true);
-        mixKnob.setVisible(true);
         
+        ratioFourToggle.setVisible(true);
+        ratioEightToggle.setVisible(true);
+        ratioTwelveToggle.setVisible(true);
+        ratioTwentyToggle.setVisible(true);
+        ratioAllToggle.setVisible(true);
         
-        lowCutKnob.setVisible(false);
-        highCutKnob.setVisible(false);
-        crossoverKnob.setVisible(false);
+        ratioKnob.setVisible(false);
         
-        normalTremButton.setVisible(false);
-        trebleTremButton.setVisible(false);
-        bassTremButton.setVisible(false);
-        
-        peakScButton.setVisible(false);
-        rmsScButton.setVisible(false);
-        levelCorrectedButton.setVisible(false);
-        smoothButton.setVisible(false);
-        
+        mixKnob.setVisible(false);
+        thresholdKnob.setVisible(false);
+        overEasyButton.setVisible(false);
         processor.defaultKnobView = 1;
     }
-   
-    if (processor.tremTypeAlgorithm == 0) {
-         crossoverKnob.setEnabled(false);
-    }
-
+    
+    
 }
 
 void IconicCompressor_betaAudioProcessorEditor::resized()
@@ -694,132 +369,127 @@ void IconicCompressor_betaAudioProcessorEditor::resized()
 
 void IconicCompressor_betaAudioProcessorEditor::buttonClicked(Button* button)
 {
-  
+    
     //---------WAVETYPE VALUES-------------------
-    if (button == &compressorKnobsButton) {
+    if (button == &fetCompToggle) {
         
         // need to remove analog toggle buttons & add digital buttons
+        
+        overEasyButton.setVisible(false);
+        thresholdKnob.setVisible(false);
+        mixKnob.setVisible(false);
+        
+        inputKnob.setVisible(false);
+        outputKnob.setVisible(false);
+        attackKnob.setVisible(false);
+        releaseKnob.setVisible(false);
+        ratioKnob.setVisible(false);
+        
+        inputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
+        //ratioKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        attackKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
+        releaseKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
+        outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::azure);
+        
+        inputKnob.setVisible(true);
+        outputKnob.setVisible(true);
+        attackKnob.setVisible(true);
+        releaseKnob.setVisible(true);
+        
+        ratioFourToggle.setVisible(true);
+        ratioEightToggle.setVisible(true);
+        ratioTwelveToggle.setVisible(true);
+        ratioTwentyToggle.setVisible(true);
+        ratioAllToggle.setVisible(true);
+        
+        
+    }
+    if (button == &opticalCompToggle){
+        attackKnob.setVisible(false);
+        releaseKnob.setVisible(false);
+        ratioKnob.setVisible(false);
+        
+        mixKnob.setVisible(false);
+        overEasyButton.setVisible(false);
+        
+        inputKnob.setVisible(false);
+        thresholdKnob.setVisible(false);
+        outputKnob.setVisible(false);
+        
+        ratioTwentyToggle.setVisible(false);
+        ratioTwelveToggle.setVisible(false);
+        ratioEightToggle.setVisible(false);
+        ratioFourToggle.setVisible(false);
+        ratioAllToggle.setVisible(false);
+        
+        inputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        thresholdKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        
+        inputKnob.setVisible(true);
+        thresholdKnob.setVisible(true);
+        outputKnob.setVisible(true);
+        
+        
+    }
+    if(button == &vcaCompToggle){
+        inputKnob.setVisible(false);
+        attackKnob.setVisible(false);
+        releaseKnob.setVisible(false);
+        mixKnob.setVisible(false);
+        
+        thresholdKnob.setVisible(false);
+        overEasyButton.setVisible(false);
+        ratioKnob.setVisible(false);
+        outputKnob.setVisible(false);
+        
+        ratioTwentyToggle.setVisible(false);
+        ratioTwelveToggle.setVisible(false);
+        ratioEightToggle.setVisible(false);
+        ratioFourToggle.setVisible(false);
+        ratioAllToggle.setVisible(false);
+        
+        thresholdKnob.setColour(HackAudio::foregroundColourId, juce::Colours::firebrick);
+        ratioKnob.setColour(HackAudio::foregroundColourId, juce::Colours::skyblue);
+        outputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::seagreen);
+        
+        thresholdKnob.setVisible(true);
+        overEasyButton.setVisible(true);
+        ratioKnob.setVisible(true);
+        outputKnob.setVisible(true);
+        
+        
+    }
+    if(button == &tubeCompToggle){
+        
+        outputKnob.setVisible(false);
+        ratioKnob.setVisible(false);
+        mixKnob.setVisible(false);
+        overEasyButton.setVisible(false);
+        
+        inputKnob.setVisible(false);
+        thresholdKnob.setVisible(false);
+        attackKnob.setVisible(false);
+        releaseKnob.setVisible(false);
+        
+        ratioTwentyToggle.setVisible(false);
+        ratioTwelveToggle.setVisible(false);
+        ratioEightToggle.setVisible(false);
+        ratioFourToggle.setVisible(false);
+        ratioAllToggle.setVisible(false);
+        
+        inputKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        thresholdKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        attackKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
+        releaseKnob.setColour(HackAudio::foregroundColourId, juce::Colours::black);
         
         inputKnob.setVisible(true);
         thresholdKnob.setVisible(true);
         attackKnob.setVisible(true);
         releaseKnob.setVisible(true);
-        ratioKnob.setVisible(true);
-        outputKnob.setVisible(true);
-        mixKnob.setVisible(true);
-        
-        
-        lowCutKnob.setVisible(false);
-        highCutKnob.setVisible(false);
-        crossoverKnob.setVisible(false);
-        
-        normalTremButton.setVisible(false);
-        trebleTremButton.setVisible(false);
-        bassTremButton.setVisible(false);
-        
-        peakScButton.setVisible(false);
-        rmsScButton.setVisible(false);
-        levelCorrectedButton.setVisible(false);
-        smoothButton.setVisible(false);
         
     }
-    if (button == &sidechainKnobsButton){
-      
-        inputKnob.setVisible(false);
-        thresholdKnob.setVisible(false);
-        attackKnob.setVisible(false);
-        releaseKnob.setVisible(false);
-        ratioKnob.setVisible(false);
-        outputKnob.setVisible(false);
-        mixKnob.setVisible(false);
-       
-        lowCutKnob.setVisible(true);
-        highCutKnob.setVisible(true);
-        
-        normalTremButton.setVisible(false);
-        trebleTremButton.setVisible(false);
-        bassTremButton.setVisible(false);
-        
-        crossoverKnob.setVisible(false);
-        peakScButton.setVisible(true);
-        rmsScButton.setVisible(true);
-        levelCorrectedButton.setVisible(true);
-        smoothButton.setVisible(true);
-        
-    }
-    if(button == &multibandKnobsButton){
-        inputKnob.setVisible(false);
-        thresholdKnob.setVisible(false);
-        attackKnob.setVisible(false);
-        releaseKnob.setVisible(false);
-        ratioKnob.setVisible(false);
-        outputKnob.setVisible(false);
-        mixKnob.setVisible(false);
-        
-        lowCutKnob.setVisible(false);
-        highCutKnob.setVisible(false);
-        
-        crossoverKnob.setVisible(true);
-        normalTremButton.setVisible(true);
-        trebleTremButton.setVisible(true);
-        bassTremButton.setVisible(true);
-        
-        peakScButton.setVisible(false);
-        rmsScButton.setVisible(false);
-        levelCorrectedButton.setVisible(false);
-        smoothButton.setVisible(false);
-    }
-    
-    if (button == &peakScButton) {
-        processor.sideChainAlgorithm = 0;
-    }
-    if (button == &rmsScButton) {
-        processor.sideChainAlgorithm = 1;
-    }
-    if (button == &levelCorrectedButton) {
-        processor.sideChainAlgorithm = 2;
-    }
-    if (button == &smoothButton) {
-        processor.sideChainAlgorithm = 3;
-    }
-   //---------------------------------------------
-    if (button == &feedForwardButton) {
-        processor.systemDesign = 0;
-    }
-    if (button == &feedBackScButton) {
-        processor.systemDesign = 1;
-    }
-    if (button == &hybridButton) {
-        processor.systemDesign = 2;
-    }
-    if (button == &logOrderButton) {
-        processor.systemOrder = 0;
-    }
-    if (button == &rttOrderButton) {
-        processor.systemOrder = 1;
-    }
-    if (button == &rtzOrderButton) {
-        processor.systemOrder = 2;
-    }
-
-    //------------TREMTYPE VALUES----------------------
-    
-    if (button == &normalTremButton) {
-        processor.tremTypeAlgorithm = 0;
-        crossoverKnob.setEnabled(false);
-    }
-    if (button == &trebleTremButton) {
-        processor.tremTypeAlgorithm = 1;
-        crossoverKnob.setEnabled(true);
-    }
-    if (button == &bassTremButton) {
-        processor.tremTypeAlgorithm = 2;
-        crossoverKnob.setEnabled(true);
-    }
-    
-    
 }
-
 void IconicCompressor_betaAudioProcessorEditor::sliderValueChanged(Slider* slider){
     //-----LABEL CHANGES, UPDATES THE KNOB LABELS WHEN USER CHANGES A PARAMETER---------
     if (!isShowing()) return;
@@ -836,23 +506,14 @@ void IconicCompressor_betaAudioProcessorEditor::sliderValueChanged(Slider* slide
     if (slider == &thresholdKnob) {
         thresholdLabel.setText(String(thresholdKnob.getValue(),1),dontSendNotification);
     }
-    if (slider == &crossoverKnob) {
-        crossoverLabel.setText(String(crossoverKnob.getValue(),1),dontSendNotification);
-    }
+    
     if (slider == &releaseKnob) {
         releaseLabel.setText(String(releaseKnob.getValue(),1),dontSendNotification);
     }
     if (slider == &outputKnob) {
         outputLabel.setText(String(outputKnob.getValue(),1),dontSendNotification);
     }
-    if (slider == &lowCutKnob) {
-        lowCutLabel.setText(String(lowCutKnob.getValue(),1),dontSendNotification);
-        
-    }
-    if (slider == &highCutKnob) {
-        highCutLabel.setText(String(highCutKnob.getValue(),1),dontSendNotification);
-        
-    }
+    
     //Starts a timer, after it expires, resets the labels to default values
     startTimer(1200);
 }
@@ -865,11 +526,9 @@ void IconicCompressor_betaAudioProcessorEditor::timerCallback()
     releaseLabel.setText("Release", dontSendNotification);
     thresholdLabel.setText("Threshold", dontSendNotification);
     ratioLabel.setText("Ratio", dontSendNotification);
-    crossoverLabel.setText("Crossover", dontSendNotification);
     outputLabel.setText("Output", dontSendNotification);
-    lowCutLabel.setText("Low Cut", dontSendNotification);
-    highCutLabel.setText("High Cut", dontSendNotification);
     mixLabel.setText("Wet/Dry Mix", dontSendNotification);
     
 }
+
 

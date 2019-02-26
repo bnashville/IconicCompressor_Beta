@@ -75,23 +75,32 @@ public:
     int algorithm = 0;
     int typeModifier = 0;
 
-
+    float compressorOutput = 1;
+    float adjustedInput = 0;
+    float adjustedOutput = 0;
+    float gainChange_meter;
+    
     AudioProcessorValueTreeState& getState();
+    AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    AudioProcessorValueTreeState treeState;
+    
+    float* inputParameter = nullptr;
+    float* outputParameter  = nullptr;
+    float* thresholdParameter = nullptr;
+    float* attackParameter = nullptr;
+    float* releaseParameter  = nullptr;
+    float* ratioParameter = nullptr;
+    float* mixParameter = nullptr;
     
 private:
     compressor* thisCompressor;
         
     double Fs = 48000;
     float pi = 3.141592653589793238;
-    float adjustedInput = 0;
-   
-    float compressorOutput = 1;
-   
+
     AudioPlayHead* playHead;
     AudioPlayHead::CurrentPositionInfo currentPositionInfo;
-    
-    ScopedPointer<AudioProcessorValueTreeState> state;
-    
+
     float randNum = rand()%(1-0 + 1) + 0;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IconicCompressor_betaAudioProcessor)

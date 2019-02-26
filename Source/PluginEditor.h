@@ -25,29 +25,37 @@ public Timer
 public:
     void extracted();
     
-    IconicCompressor_betaAudioProcessorEditor (IconicCompressor_betaAudioProcessor&);
+    IconicCompressor_betaAudioProcessorEditor (IconicCompressor_betaAudioProcessor&, AudioProcessorValueTreeState&);
     ~IconicCompressor_betaAudioProcessorEditor();
 
     //==============================================================================
     void paint (Graphics&) override;
     void resized() override;
 
+    typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
+    typedef AudioProcessorValueTreeState::ButtonAttachment ButtonAttachment;
+    
     void buttonClicked (Button* button) override;
     void sliderValueChanged(Slider* slider) override;
     void timerCallback() override;
     
     int guiWidth = 825;
-    int guiHeight = 620;
+    int guiHeight = 420;
     int guiCenter = guiWidth/2;
     
     int largeSliderSize = 100;
     int smallSliderSize = 75;
     int knobSpacing = 100;
     
+    int ratioKnobWidth = 45;
+    int ratioKnobHeight = 30;
+    
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
-
+    AudioProcessorValueTreeState& valueTreeState;
+    IconicCompressor_betaAudioProcessor& processor;
+    
     HackAudio::Selector testSelector;
     
     HackAudio::Slider inputKnob;
@@ -58,12 +66,16 @@ private:
     HackAudio::Slider releaseKnob;
     HackAudio::Slider toneKnob;
     HackAudio::Slider attackKnob;
+    HackAudio::Slider mixKnob;
+    
+    HackAudio::Meter grMeter;
     
     juce::Label inputLabel;
     juce::Label thresholdLabel;
     juce::Label crossoverLabel;
     juce::Label ratioLabel;
     juce::Label outputLabel;
+    juce::Label overEasyButtonLabel;
     
     juce::Label lowCutLabel;
     juce::Label highCutLabel;
@@ -72,103 +84,37 @@ private:
     juce::Label toneLabel;
     juce::Label releaseLabel;
     juce::Label attackLabel;
-    IconicCompressor_betaAudioProcessor& processor;
     
-    HackAudio::Button sidechainKnobsButton;
-    HackAudio::Button compressorKnobsButton;
-    HackAudio::Button multibandKnobsButton;
-    
-    HackAudio::Button tubeButton;
-    HackAudio::Button opticalButton;
-    HackAudio::Button fetButton;
-    HackAudio::Button vcaButton;
+    HackAudio::Button fetCompToggle;
+    HackAudio::Button opticalCompToggle;
+    HackAudio::Button tubeCompToggle;
+    HackAudio::Button vcaCompToggle;
 
-    HackAudio::Button peakScButton;
-    HackAudio::Button rmsScButton;
-    HackAudio::Button smoothButton;
-    HackAudio::Button levelCorrectedButton;
-    
-    HackAudio::Button feedBackScButton;
-    HackAudio::Button feedForwardButton;
-    HackAudio::Button hybridButton;
+    HackAudio::Button overEasyButton;
 
-    HackAudio::Button logOrderButton;
-    HackAudio::Button rtzOrderButton;
-    HackAudio::Button rttOrderButton;
+    HackAudio::Button ratioFourToggle;
+    HackAudio::Button ratioEightToggle;
+    HackAudio::Button ratioTwelveToggle;
+    HackAudio::Button ratioTwentyToggle;
+    HackAudio::Button ratioAllToggle;
     
-    HackAudio::Button normalTremButton;
-    HackAudio::Button trebleTremButton;
-    HackAudio::Button bassTremButton;
-    HackAudio::Button phaseTremButton;
-    
-    HackAudio::Slider lowCutKnob;
-    HackAudio::Slider highCutKnob;
-    HackAudio::Slider mixKnob;
-    
-    HackAudio::FlexBox flexOrder;
     HackAudio::FlexBox flexButtons;
     HackAudio::FlexBox flexKnobsCompressor;
-    HackAudio::FlexBox flexAnalog;
-    HackAudio::FlexBox flexLevelDetector;
-    HackAudio::FlexBox flexSystemDesign;
+    HackAudio::FlexBox flexRatioToggle;
+    HackAudio::FlexBox flexMeter;
     
-    HackAudio::FlexBox flexNote;
-    HackAudio::FlexBox flexTremType;
-    HackAudio::FlexBox flexSideChain;
-    HackAudio::FlexBox flexMix;
-    HackAudio::FlexBox flexKnobsSidechain;
-    HackAudio::FlexBox flexMultiband;
-    
-    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> thresholdAttachment;
-    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> crossoverAttachment;
-    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> ratioAttachment;
-    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> outputAttachment;
-    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> inputAttachment;
-    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> toneAttachment;
-    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> rateSourceAttachment;
-    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> releaseAttachment;
-    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> attackAttachment;
-    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> lowCutAttachment;
-    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> highCutAttachment;
-    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> mixAttachment;
-    
-    
-    ///////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////
-    ////// Block Diagram Area /////////////////////////////////////////
-    
-    // Creating all of the Diagram Objects
+    ////// Block Diagram Area /////////
     HackAudio::Viewport port;
-    HackAudio::Diagram overviewDiagram;
-    HackAudio::Diagrams::Gain gainDiagram;
-    HackAudio::Diagrams::Predelay predelayDiagram;
-    HackAudio::Diagrams::BiquadFilter lpfDiagram;
-    HackAudio::Diagrams::BiquadFilter hpfDiagram;
-    HackAudio::Diagrams::SchroederReverb schDiagram;
-    HackAudio::Diagrams::MoorerReverb morDiagram;
-    HackAudio::Diagrams::EarlyReflections morERDiagram;
-    HackAudio::Diagrams::LPCombFilter morCFDiagram;
-    HackAudio::Diagrams::FDNReverb fdnDiagram;
-    HackAudio::Diagrams::DattorroReverb datDiagram;
-    HackAudio::Diagrams::GardnersmallReverb garSDiagram;
-    HackAudio::Diagrams::GardnermediumReverb garMDiagram;
-    HackAudio::Diagrams::GardnerlargeReverb garLDiagram;
+    //HackAudio::Diagrams::Compressor compressorDiagram;
     
-    // Various blocks as part of the Overview diagram
-    HackAudio::Label bitBlock;
-    HackAudio::Label predelayBlock;
-    HackAudio::Label reverbBlock;
-    HackAudio::Label lpfBlock;
-    HackAudio::Label hpfBlock;
-    HackAudio::Label gainBlock;
-    HackAudio::Diagram::Junction sumJunction;
-    HackAudio::Label dryBlock;
-    HackAudio::Label wetBlock;
-    
-    
-    
-    // This reference is provided as a quick way for your editor to
-    // access the processor object that created it.
+public:
+    std::unique_ptr<SliderAttachment> thresholdAttachment;
+    std::unique_ptr<SliderAttachment> outputAttachment;
+    std::unique_ptr<SliderAttachment> ratioAttachment;
+    std::unique_ptr<SliderAttachment> inputAttachment;
+    std::unique_ptr<SliderAttachment> attackAttachment;
+    std::unique_ptr<SliderAttachment> releaseAttachment;
+    std::unique_ptr<SliderAttachment> mixAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IconicCompressor_betaAudioProcessorEditor)
 };

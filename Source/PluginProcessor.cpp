@@ -1,12 +1,12 @@
 /*
-  ==============================================================================
-
-    This file was auto-generated!
-
-    It contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
+ ==============================================================================
+ 
+ This file was auto-generated!
+ 
+ It contains the basic framework code for a JUCE plugin processor.
+ 
+ ==============================================================================
+ */
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
@@ -16,40 +16,62 @@
 //==============================================================================
 IconicCompressor_betaAudioProcessor::IconicCompressor_betaAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", AudioChannelSet::stereo(), true)
-                     #endif
-                       )
+: AudioProcessor (BusesProperties()
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+                  .withInput  ("Input",  AudioChannelSet::stereo(), true)
 #endif
+                  .withOutput ("Output", AudioChannelSet::stereo(), true)
+#endif
+                  ),
+#endif
+treeState (*this, nullptr, Identifier ("AnalogCompressor"), createParameterLayout() )
+
 {
     
-    state = new AudioProcessorValueTreeState(*this, nullptr);
+    //thisBiquad = new RBJFilter();
+    
+    inputParameter = treeState.getRawParameterValue("input");
+    outputParameter = treeState.getRawParameterValue("output");
+    thresholdParameter = treeState.getRawParameterValue("threshold");
+    mixParameter = treeState.getRawParameterValue("mix");
+    attackParameter = treeState.getRawParameterValue("attack");
+    releaseParameter = treeState.getRawParameterValue("release");
+    ratioParameter = treeState.getRawParameterValue("ratio");
+    
     thisCompressor = new compressor();
     
-    state->createAndAddParameter("input", "Input", "Input", NormalisableRange<float>(-48, 12, .1), 0, nullptr, nullptr);
-    state->createAndAddParameter("output", "Output", "Output", NormalisableRange<float>(-48, 12, .1), 0, nullptr, nullptr);
-    state->createAndAddParameter("threshold", "Threshold", "Threshold", NormalisableRange<float>(-48, 12, .1), 0, nullptr, nullptr);
-    state->createAndAddParameter("mix", "Mix", "Mix", NormalisableRange<float>(0, 100, .1), 100, nullptr, nullptr);
-    
-    state->createAndAddParameter("attack", "Attack", "Attack", NormalisableRange<float>(10.f, 800, .5), 20, nullptr, nullptr);
-     state->createAndAddParameter("release", "Release", "Release", NormalisableRange<float>(50.f, 1100, .5), 50.0, nullptr, nullptr);
-    state->createAndAddParameter("ratio", "Ratio", "Ratio", NormalisableRange<float>(1, 20, 0.1), 3, nullptr, nullptr);
-    state->createAndAddParameter("crossover", "Crossover", "Crossover", NormalisableRange<float>(30, 20000, 1), 2000.0, nullptr, nullptr);
-    
-    state->createAndAddParameter("lowCut", "LowCut", "LowCut", NormalisableRange<float>(20, 18000, 1), 20.0, nullptr, nullptr);
-    state->createAndAddParameter("highCut", "HighCut", "HighCut", NormalisableRange<float>(20, 20000, 1), 20000.0, nullptr, nullptr);
-   
-    state->state = ValueTree("compressor");
-  
 }
+
+AudioProcessorValueTreeState::ParameterLayout IconicCompressor_betaAudioProcessor::createParameterLayout()
+{
+    std::vector <std::unique_ptr<RangedAudioParameter>> params;
+    
+    auto inputParams = std::make_unique<AudioParameterFloat> ("input","Input",-48,12,0);
+    auto outputParams = std::make_unique<AudioParameterFloat> ("output","Output",    -48,12,0);
+    auto thresholdParams = std::make_unique<AudioParameterFloat> ("threshold","Threshold",-48,12,0);
+    auto mixParams = std::make_unique<AudioParameterFloat> ("mix","Mix",    0,100,100);
+    auto attackParams = std::make_unique<AudioParameterFloat> ("attack","Attack",  NormalisableRange<float> (0.00002, 0.0008), .0004);
+    //0.00002, 0.0008, .0004);
+    auto releaseParams = std::make_unique<AudioParameterFloat> ("release","Release",0.05, 1.1, .7);
+    auto ratioParams = std::make_unique<AudioParameterFloat> ("ratio","Ratio",    1, 20, 3);
+    
+    params.push_back(std::move(inputParams));
+    params.push_back(std::move(outputParams));
+    params.push_back(std::move(thresholdParams));
+    params.push_back(std::move(mixParams));
+    params.push_back(std::move(attackParams));
+    params.push_back(std::move(releaseParams));
+    params.push_back(std::move(ratioParams));
+    
+    return { params.begin(), params.end() };
+    
+}
+
 
 IconicCompressor_betaAudioProcessor::~IconicCompressor_betaAudioProcessor()
 {
-
+    
     delete thisCompressor;
 }
 
@@ -61,29 +83,29 @@ const String IconicCompressor_betaAudioProcessor::getName() const
 
 bool IconicCompressor_betaAudioProcessor::acceptsMidi() const
 {
-   #if JucePlugin_WantsMidiInput
+#if JucePlugin_WantsMidiInput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool IconicCompressor_betaAudioProcessor::producesMidi() const
 {
-   #if JucePlugin_ProducesMidiOutput
+#if JucePlugin_ProducesMidiOutput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool IconicCompressor_betaAudioProcessor::isMidiEffect() const
 {
-   #if JucePlugin_IsMidiEffect
+#if JucePlugin_IsMidiEffect
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 double IconicCompressor_betaAudioProcessor::getTailLengthSeconds() const
@@ -94,7 +116,7 @@ double IconicCompressor_betaAudioProcessor::getTailLengthSeconds() const
 int IconicCompressor_betaAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
-                // so this should be at least 1, even if you're not really implementing programs.
+    // so this should be at least 1, even if you're not really implementing programs.
 }
 
 int IconicCompressor_betaAudioProcessor::getCurrentProgram()
@@ -120,10 +142,9 @@ void IconicCompressor_betaAudioProcessor::prepareToPlay (double sampleRate, int 
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    //Fs = getSampleRate();
-    //thisCompressor->SetSamplingRate(Fs);
-thisCompressor->SetSamplingRate(sampleRate);
-     
+
+    thisCompressor->SetSamplingRate(sampleRate);
+    
 }
 
 void IconicCompressor_betaAudioProcessor::releaseResources()
@@ -135,24 +156,24 @@ void IconicCompressor_betaAudioProcessor::releaseResources()
 #ifndef JucePlugin_PreferredChannelConfigurations
 bool IconicCompressor_betaAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-  #if JucePlugin_IsMidiEffect
+#if JucePlugin_IsMidiEffect
     ignoreUnused (layouts);
     return true;
-  #else
+#else
     // This is the place where you check if the layout is supported.
     // In this template code we only support mono or stereo.
     if (layouts.getMainOutputChannelSet() != AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != AudioChannelSet::stereo())
+        && layouts.getMainOutputChannelSet() != AudioChannelSet::stereo())
         return false;
-
+    
     // This checks if the input layout matches the output layout
-   #if ! JucePlugin_IsSynth
+#if ! JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
-   #endif
-
+#endif
+    
     return true;
-  #endif
+#endif
 }
 #endif
 
@@ -161,7 +182,7 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-
+    
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
     // guaranteed to be empty - they may contain garbage).
@@ -169,103 +190,64 @@ void IconicCompressor_betaAudioProcessor::processBlock (AudioBuffer<float>& buff
     // when they first compile a plugin, but obviously you don't need to keep
     // this code if your algorithm always overwrites all the output channels.
     
-    //load in values from the GUI knobs - these were in the channel loop, moved them out. 
-    float thresholdValue = *state->getRawParameterValue("threshold");
-    float crossoverValue = *state->getRawParameterValue("crossover");
-    float inputValue = *state->getRawParameterValue("input");
-    float outputValue = *state->getRawParameterValue("output");
-    float attackValue = *state->getRawParameterValue("attack");
-    float releaseValue = *state->getRawParameterValue("release");
-    float ratioValue = *state->getRawParameterValue("ratio");
-    float wetDryValue = *state->getRawParameterValue("mix");
+    //load in values from the GUI knobs - these were in the channel loop, moved them out.
     
-    float lowCutValue = *state->getRawParameterValue("lowCut");
-    float highCutValue = *state->getRawParameterValue("highCut");
+    auto thresholdValue = *thresholdParameter;
+    auto inputValue = *inputParameter;
+    auto outputValue = *outputParameter;
+    auto attackValue = *attackParameter;
+    auto releaseValue = *releaseParameter;
+    auto ratioValue = *ratioParameter;
+    auto wetDryValue = *mixParameter;
     
     //send all these values to the compressor class. Would make sense to be able to send all in one function
     thisCompressor->setAttack(attackValue);
     thisCompressor->setRelease(releaseValue);
     thisCompressor->setThreshold(thresholdValue);
     thisCompressor->setRatio(ratioValue);
-    thisCompressor->setCrossoverFrequency(crossoverValue);
-    thisCompressor->setHighCutoff(highCutValue);
-    thisCompressor->setLowCutoff(lowCutValue);
-    
-    
-   // thisCompressor->setChannelCount(totalNumInputChannels); // for future revisions
-    
-    //optional parameters to be sent to subclasses of the compressor
-    thisCompressor->setBandType(multiband::bandType(multiband::bandType::NORMAL));
-
-    // set the "units" of the level detector, either 'db' or 'linear'
-    //thisCompressor->setDetectorUnit(levelDetector::detectorUnit((levelDetector::detectorUnit::DB)));
-    
-    // should only need to do all these IF statements below if the values have changed... add a listener? 
-    
-    if (sideChainAlgorithm == 0){
-    thisCompressor->setDetectorType(gainSmoothing::detectorType((gainSmoothing::detectorType::PEAK))); //
-    }
-    else if (sideChainAlgorithm == 1){
-         thisCompressor->setDetectorType(gainSmoothing::detectorType((gainSmoothing::detectorType::RMS)));
-    }
-    else if (sideChainAlgorithm == 2){
-         thisCompressor->setDetectorType(gainSmoothing::detectorType((gainSmoothing::detectorType::LCP)));
-    }
-    else {
-         thisCompressor->setDetectorType(gainSmoothing::detectorType((gainSmoothing::detectorType::SMOOTH)));
-    }
-    
-    if (systemOrder == 0 ){
-        thisCompressor->setDetectorPlacement(levelDetector::detectorPlacement::LOGDOMAIN); // this should be default, don't need this line.
-    }
-    else if (systemOrder == 1){
-        thisCompressor->setDetectorPlacement(levelDetector::detectorPlacement::RETURNTOTHRESH);
-    }
-    else if (systemOrder == 2){
-        thisCompressor->setDetectorPlacement(levelDetector::detectorPlacement::RETURNTOZERO); 
-    }
     
     
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-
+    
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
     // Make sure to reset the state if your inner loop is processing
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-
+    
     //loop through each channel, I.E. Left & Right, or 5.1, etc. -------------------------------------------------------------------
     
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         thisCompressor->setCurrentChannel(channel);
-      
+        
         //loop throught all samples in the buffer
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample){
-       
+            
             //apply input scalar here
             adjustedInput = buffer.getReadPointer(channel)[sample] * pow(10.f,inputValue/20.f);
             
-            //set sidechain input sample
-            //thisCompressor->setSidechainInput(adjustedInput);
-            compressorOutput = thisCompressor->tick(adjustedInput, channel) * pow(10.f,outputValue/20.f);
+            //grMeter.setSource(channel, adjustedInput);
             
+            compressorOutput = thisCompressor->tick(adjustedInput, channel);
+            
+            adjustedOutput = compressorOutput * pow(10.f,outputValue/20.f);
+            
+            gainChange_meter = thisCompressor->getGainChange();
+            
+            //gainChange_meter = abs(adjustedInput - compressorOutput);
             //apply output scalar, write the output buffer.
-            //buffer.getWritePointer(channel)[sample] = compressorOutput ;
-            buffer.getWritePointer(channel)[sample] = (compressorOutput * (wetDryValue/100)) + (adjustedInput * ( (100-wetDryValue) /100 ));
+            buffer.getWritePointer(channel)[sample] = adjustedOutput ;
+            
+            //next line is to activate wet/dry mix
+            //buffer.getWritePointer(channel)[sample] = (compressorOutput * (wetDryValue/100)) + (adjustedInput * ( (100-wetDryValue) /100 ));
             
         } // sample loop
-
+        
         // ..do something to the data...
     }
-}
-
-AudioProcessorValueTreeState& IconicCompressor_betaAudioProcessor::getState(){
-    
-    return *state;
-    
 }
 
 //==============================================================================
@@ -276,34 +258,23 @@ bool IconicCompressor_betaAudioProcessor::hasEditor() const
 
 AudioProcessorEditor* IconicCompressor_betaAudioProcessor::createEditor()
 {
-    return new IconicCompressor_betaAudioProcessorEditor (*this);
+    return new IconicCompressor_betaAudioProcessorEditor (*this, treeState);
 }
 
 //==============================================================================
 void IconicCompressor_betaAudioProcessor::getStateInformation (MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
-    
-    MemoryOutputStream stream(destData, false);
-    state->state.writeToStream(stream);
-    
+    auto state = treeState.copyState();
+    std::unique_ptr<XmlElement> xml (state.createXml());
+    copyXmlToBinary (*xml, destData);
 }
 
 void IconicCompressor_betaAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
-    
-    ValueTree tree = ValueTree::readFromData(data, sizeInBytes);
-    
-    if(tree.isValid()){
-        
-        state->state = tree;
-    }
-    
-    
+    std::unique_ptr<XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+    if (xmlState.get() != nullptr)
+        if (xmlState->hasTagName (treeState.state.getType()))
+            treeState.replaceState (ValueTree::fromXml (*xmlState));
 }
 
 //==============================================================================
@@ -312,5 +283,6 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new IconicCompressor_betaAudioProcessor();
 }
+
 
 
