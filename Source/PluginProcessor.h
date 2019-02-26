@@ -58,19 +58,8 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    
-    //my variables
-
-    //int compressorAlgorithm = 0;
-    //int rateSourceAlgorithm = 1;
     int defaultKnobView = 0;
-    //int sideChainAlgorithm = 3;
-    
-    //float multiplierAlgorithm = 8;
-    //int tremTypeAlgorithm = 0;
-    //int systemDesign = 0;
-    //int systemOrder = 0;
-    
+
     //block diagram
     int algorithm = 0;
     int typeModifier = 0;
